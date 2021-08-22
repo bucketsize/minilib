@@ -231,19 +231,19 @@ Util.Timer = {
    t = 0,
    fns = {},
    tick = function(self, interval, fn)
-      table.insert(self.fns, {fn = fn, i = interval})
+	  table.insert(self.fns, {fn = fn, i = interval})
    end,
    start = function(self)
-      print("run forever ...")
-      while true do
-	 for i, fd in ipairs(self.fns) do
-	    if (self.t % fd.i) == 0 then
-	       fd.fn()
-	    end
-	 end
-	 socket.sleep(self.epoc)
-	 self.t = self.t + 1
-      end
+	  print("run forever ...")
+	  while true do
+		 for i, fd in ipairs(self.fns) do
+			if (self.t % fd.i) == 0 then
+			   fd.fn()
+			end
+		 end
+		 socket.sleep(self.epoc)
+		 self.t = self.t + 1
+	  end
    end
 }
 
