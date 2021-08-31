@@ -185,6 +185,24 @@ function Util:split(str, pat)
 	end
 	return arr
 end
+function Util:iswhitespace(c)
+	return (c == "" or c == " " or c == "\t")
+end
+function Util:strip(str)
+	for i = 1, #str do
+		local c = str:sub(i, i)
+		--print(i,c)
+		if not Util:iswhitespace(c) then
+			for j = #str, 1, -1 do
+				local r = str:sub(j, j)
+				--print(j,r)
+				if not Util:iswhitespace(r) then
+					return str:sub(i, j)
+				end
+			end
+		end
+	end
+end
 function Util:printITable(t)
 	for i,v in ipairs(t) do
 		print(i .. ': ', v)

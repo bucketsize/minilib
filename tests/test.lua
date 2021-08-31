@@ -113,6 +113,10 @@ function test_segpath()
 	  print(ps[#ps])
    end
 end
+function test_strip()
+	print(string.format("|%s|", Util:strip("   lo i am a doctor 	")))
+	print(string.format("|%s|", Util:strip("    	der maus speilt nie klavier   ")))
+end
 
 test_pipe()
 test_pipe2()
@@ -121,4 +125,5 @@ test_split()
 test_map()
 test_listToString()
 test_segpath()
+test_strip()
 test_timer()
