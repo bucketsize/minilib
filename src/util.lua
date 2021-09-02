@@ -185,6 +185,17 @@ function Util:split(str, pat)
 	end
 	return arr
 end
+function Util:join(tag, list)
+	local s=""
+	for i,v in ipairs(list) do
+		if i == #list then
+			s = string.format("%s%s",s,v)
+		else
+			s = string.format("%s%s%s",s,v,tag)
+		end
+	end
+	return s
+end
 function Util:iswhitespace(c)
 	return (c == "" or c == " " or c == "\t")
 end
