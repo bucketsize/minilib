@@ -1,24 +1,21 @@
 #!/usr/bin/env lua
 
--- package.path = package.path .. ';'
---    .. os.getenv("HOME") .. '/.luarocks/share/lua/5.4/?.lua;'
---    .. os.getenv("HOME") .. '/.luarocks/share/lua/5.4/?/init.lua;'
+package.path = os.getenv("HOME") .. '/?.lua;'
+    .. package.path
 
-require "luarocks.loader"
-
+local Pr = require("minilib.process")
+local Sh = require("minilib.shell")
 local Util = require("minilib.util")
-local Process = require("minilib.process")
-local F = require("minilib.shell")
 
 function test_pipe()
 	local m1,m2
-	local r = Process.pipe()
-		.add(F.cat('/proc/meminfo'))
-		.add(Process.branch()
-			.add(F.grep('MemFree'))
-			.add(F.grep('SwapFree'))
+	local r = Pr.pipe()
+		.add(Sh.cat('/proc/meminfo'))
+		.add(Pr.branch()
+			.add(Sh.grep('MemFree'))
+			.add(Sh.grep('SwapFree'))
 			.build())
-		.add(Process.cull())
+		.add(Pr.cull())
 		.add(function(list)
 			for i,v in pairs(list) do
 				if (i == 1) then m1=v end
@@ -26,19 +23,19 @@ function test_pipe()
 			end
 			return list
 		end)
-		.add(F.echo())
+		.add(Sh.echo())
 		.run()
 end
 
 function test_pipe2()
 	local m1,m2
-	local r = Process.pipe()
-		.add(F.exec('lspci'))
-		.add(Process.branch()
-			.add(F.grep('VGA.*'))
-			.add(F.grep('Audio.*'))
+	local r = Pr.pipe()
+		.add(Sh.exec('lspci'))
+		.add(Pr.branch()
+			.add(Sh.grep('VGA.*'))
+			.add(Sh.grep('Audio.*'))
 			.build())
-		.add(Process.cull())
+		.add(Pr.cull())
 		.add(function(list)
 			for i,v in pairs(list) do
 				if (i == 1) then m1=v end
@@ -46,12 +43,12 @@ function test_pipe2()
 			end
 			return list
 		end)
-		.add(F.echo())
+		.add(Sh.echo())
 		.run()
 end
 
 function test_cat()
-	local cat = F.cat('/proc/meminfo')
+	local cat = Sh.cat('/proc/meminfo')
 	print(type(cat))
 
 	p = cat()
