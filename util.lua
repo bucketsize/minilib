@@ -129,13 +129,9 @@ end
 
 local exec_log = "/var/tmp/exec.out"
 function Util:launch(app)
-   local cmd
-   if string.match(app, ".desktop") then
-	  cmd = Util:grep(app, "^Exec=([%w%s-_/]+)")
-   else
-	  cmd = app
-   end
-   cmd = string.format("nohup setsid %s > /dev/null &", cmd, exec_log)
+   local cmd = string.format("nohup setsid %s > /dev/null &"
+    , app:gsub("%%U", "/var/tmp")
+    , exec_log)
    Util:log("INFO", exec_log, "exec> "..cmd)
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")
