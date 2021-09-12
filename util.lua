@@ -242,9 +242,10 @@ Util.FILENAME_PAT='/([%a%d%s+=-_\\.\\]*)$'
 
 function Util:run_co(k, co)
    local status = coroutine.status(co)
-   if status == 'dead' then
-      return print('co/ ' .. k, status)
-   end
+	 if (status == 'dead') and (not co.dead) then
+		 co.dead = true
+		 return print('co/ ' .. k, status)
+	 end
    local ok,res = coroutine.resume(co)
    if not ok then
       print('co/ ' .. k, res)
