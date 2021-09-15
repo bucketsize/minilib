@@ -6,6 +6,7 @@ package.path = os.getenv("HOME") .. '/?.lua;'
 local Pr = require("minilib.process")
 local Sh = require("minilib.shell")
 local Util = require("minilib.util")
+local Notifeir = require("minilib.notifeir")
 
 function test_pipe()
 	local m1,m2
@@ -114,6 +115,9 @@ function test_strip()
 	print(string.format("|%s|", Util:strip("   lo i am a doctor 	")))
 	print(string.format("|%s|", Util:strip("    	der maus speilt nie klavier   ")))
 end
+function test_notifeir()
+    Notifeir:notify("test", "gotcja!")
+end
 
 test_pipe()
 test_pipe2()
@@ -123,4 +127,5 @@ test_map()
 test_listToString()
 test_segpath()
 test_strip()
+test_notifeir()
 test_timer()
