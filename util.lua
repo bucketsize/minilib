@@ -273,4 +273,8 @@ Util.Timer = {
    end
 }
 
+function Util:sleep(n)
+    socket.sleep(n)
+end
+
 return Util
