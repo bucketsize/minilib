@@ -37,6 +37,22 @@ function Util:segpath(path)
    __segpath(a, path)
    return a
 end
+function Util:head(itable)
+    if #itable == 0 then
+        return nil
+    end
+    return itable[1]
+end
+function Util:tail(itable)
+    if #itable == 0 then
+        return {}
+    end
+    local r = {}
+    for i = 2, #itable, 1 do
+        table.insert(r, itable[i])
+    end
+    return r
+end
 function Util:reverse(itable)
    local r = {}
    for i = #itable,1,-1 do
@@ -74,12 +90,20 @@ function Util:fold(f, t, i)
 	end
 	return r
 end
+function Util:haz(list, s)
+    for _,w in ipairs(list) do
+        if s:find(w) then
+            return true
+        end
+    end
+    return false
+end
 function Util:f_else(p, fn1, fn2)
-   if p then
- fn1()
-   else
-      return fn2()
-   end
+    if p then
+        fn1()
+    else
+        return fn2()
+    end
 end
 function Util:if_else(p, o1, o2)
    if p then

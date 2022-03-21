@@ -15,14 +15,13 @@ function F.pipe()
 		local a,s
 		while true do
 			local a = fn[1]()
-			if a == nil then break end
 			for i = 2, t-1 do
-				if not (a == nil) then
-					a = fn[i](a)
-				end
+                a = fn[i](a)
 			end
 			if not (a==nil) then
 				s = a
+            else
+                return s 
 			end
 		end
 		return s
