@@ -18,6 +18,9 @@ function test_pipe()
 			.build())
 		.add(Pr.cull())
 		.add(function(list)
+            if list == nil then
+                return list
+            end
 			for i,v in pairs(list) do
 				if (i == 1) then m1=v end
 				if (i == 2) then m2=v end
@@ -25,7 +28,7 @@ function test_pipe()
 			return list
 		end)
 		.add(Sh.echo())
-		.run()
+		.run(true)
 end
 
 function test_pipe2()
@@ -38,6 +41,9 @@ function test_pipe2()
 			.build())
 		.add(Pr.cull())
 		.add(function(list)
+            if list == nil then
+                return list
+            end
 			for i,v in pairs(list) do
 				if (i == 1) then m1=v end
 				if (i == 2) then m2=v end
@@ -98,10 +104,6 @@ function test_map()
 	print(r)
 end
 
-if arg[1] == 'test' then
-	test_map()
-end
-
 function test_segpath()
    local ts = {"/var/tmp/foo/bar.egg", "fry.egg", "./goto.egg", "//more.egg", "fifa/la/kase.egg"}
    for i, v in ipairs(ts) do
@@ -123,16 +125,20 @@ function test_listener()
         Util:exec("weston-flower")
     end)
 end
+function test_arch()
+    print("system architecture:", Sh.arch())
+end
 
-test_pipe()
-test_pipe2()
 test_cat()
 test_split()
 test_map()
 test_listToString()
 test_segpath()
 test_strip()
+test_pipe()
+test_pipe2()
 -- test_notifeir()
 -- test_timer()
-test_listener()
+-- test_listener()
+test_arch()
 

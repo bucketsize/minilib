@@ -6,23 +6,37 @@ function F.pipe()
 	local fn = {}
 	local t = 1
 	local p = {}
+    local e = {}
 	function p.add(f)
 		fn[t] = f
+        e[t] = false
 		t = t + 1
 		return p
 	end
-	function p.run()
-		local a,s
-		while true do
-			local a = fn[1]()
-			for i = 2, t-1 do
+	function p.run(trace)
+		local a, s = nil, nil
+        local ended = false
+		while not ended do
+            ended = true
+			for i = 1, t-1 do
+                local a0 = a
                 a = fn[i](a)
+                if a == nil then
+                    e[i] = true
+                else
+                    ended = false
+                end
+                if trace then
+                    print("fn_"..tostring(i)
+                        ,a0, "->", a, e[i])
+                end
 			end
 			if not (a==nil) then
 				s = a
-            else
-                return s 
 			end
+            if ended then
+                break
+            end
 		end
 		return s
 	end
@@ -40,11 +54,18 @@ function F.branch()
 	end
 	function p.build()
 		return function(r)
-			local out = {}
+			local out, ended = {}, true
 			for i = 1, t-1 do
 				out[i] = fn[i](r)
+                if out[i] then
+                    ended = false
+                end
 			end
-			return out
+            if ended then
+                return nil
+            else
+    			return out
+            end
 		end
 	end
 	return p
@@ -78,6 +99,9 @@ function F.cull()
 		end
 	end
 	return function(lout)
+        if lout == nil then
+            return lout
+        end
 		if fn(lout) then
 			return lout
 		end

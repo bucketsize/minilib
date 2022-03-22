@@ -1,15 +1,19 @@
 local Util = require('minilib.util')
-local Process = require('minilib.process')
+local Proc = require('minilib.process')
 
 local F = {}
 
 function F.cat(path)
    local h = assert(io.open(path, 'r'))
    return function()
-	  local l = h:read("*line")
-	  if l == nil then
-		 h:close()
-	  end
+	  local l = nil
+      if h then
+          l = h:read("*line")
+          if l == nil then
+             h:close()
+             h = nil
+          end
+      end
 	  return l
    end
 end
@@ -86,12 +90,6 @@ function F.sed(slist)
     end
 end
 
-function F.mkdir(path)
-    Util:exec(
-        string.format("mkdir -p %s", path))
-    print("mkdir", path)
-end
-
 function F.open(path, mode)
     local h = io.open(path, mode)
     if h == nil then
@@ -110,7 +108,7 @@ function F.write(head_path)
             print("write", c)
             return fline
         end
-        local wpath = head_path .. fline.path
+        local wpath = head_path .. "/".. fline.path
         if (h == nil) then
             print("write next", wpath)
             h = F.open(wpath, "w")
@@ -138,6 +136,9 @@ end
 function F.grep(patt)
 	return function(s)
 		local r = {}
+        if s == nil then
+            return r
+        end
 		r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10] = string.match(s, patt)
 		if r[1] == nil then return nil end
 		return r
@@ -177,6 +178,53 @@ function F.flat(delim)
 		end
 		return s
 	end
+end
+
+function F.assert_exec(cmd, m)
+    Util:assert_exec(cmd, m)
+end
+
+function F.mkdir(path)
+    Util:exec(
+        string.format("mkdir -pv %s", path))
+end
+
+function F.ln(s, t)
+    Util:exec(string.format("ln -svf %s %s", s, t))
+end
+
+function F.cp(s, t)
+    Util:exec(string.format("cp -vb %s %s", s, t))
+end
+
+function F.wget(url)
+    Util:exec(string.format("wget %s", url))
+end
+
+-- mutually exclusive CPU arch flags
+_ARCH_FLAG = {
+    lm = "x86_64",
+    BCM2835 = "aarch64" 
+}
+function F.arch()
+    local flags = Proc.pipe()
+	    .add(F.cat("/proc/cpuinfo"))
+        .add(Proc.branch()
+            .add(F.grep("BCM2835"))
+            .add(F.grep("lm"))
+            .build()
+        )
+        .add(Proc.cull())
+        .run(true)
+    for _,i in ipairs(flags) do
+        for _,j in ipairs(i) do
+            print("arch flag: ", j)
+            if _ARCH_FLAG[j] then
+                return _ARCH_FLAG[j]
+            end
+        end
+    end
+    return "UnknownISA"
 end
 
 function F.split_path(path)

@@ -1,3 +1,14 @@
+_HOME = os.getenv("HOME")
+_PATH = {
+    "/bin/",
+    "/sbin/",
+    "/usr/bin/",
+    "/usr/sbin/",
+    "/usr/local/bin/",
+    "/usr/local/sbin/",
+    _HOME .. "/.local/bin/",
+}
+
 local socket = require("socket")
 local Ot = require("minilib.otable")
 
@@ -119,6 +130,51 @@ function Util:file_exists(file)
 	end
 	h:close()
 	return true
+end
+function Util:path_exists(file)
+	local h = io.open(file, "r")
+	if h == nil then
+		return false
+	end
+	h:close()
+	return true
+end
+function Util:file_exists(file)
+    for i,v in ipairs(_PATH) do
+        local p = v..file
+        if Util:path_exists(p) then
+            return p
+        end
+    end
+    return nil
+end
+function Util:assert_file_exists(file)
+    if not Util:file_exists(file) then
+        print(file .. " -> required") 
+        os.exit(1)
+    end
+end
+function Util:assert_exec(cmd, m)
+    local s,err,sig = os.execute(cmd)
+    if err=="exit" then
+        if sig==0 then
+            -- nothing to do
+        else
+            print(err,sig,m)
+            os.exit(sig)
+        end
+    else
+        if err=="signal" then
+            print(err,sig,m)
+            os.exit(sig)
+        else
+            print(err,sig,m)
+            os.exit(sig)
+        end
+    end
+end
+function Util:assert_pkg_exists(pkg)
+    Util:assert_exec("pkg-config "..pkg, "require pkg: "..pkg)
 end
 function Util:read(filename)
    local h = io.open(filename, "r")
