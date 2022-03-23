@@ -56,7 +56,7 @@ function F.read()
         if not (path == nil) then
             if not Util:haz(skip_paths, path) then
                 table.insert(paths, path)
-                print("read next", path)
+                -- print("read next", path)
             end
         end
         if h == nil then
@@ -70,7 +70,7 @@ function F.read()
                 h = assert(io.open(paths[p]))
                 l = h:read("*line")
             else
-                print("read ", #paths, paths[p])
+                print("read ", #paths)
                 return nil
             end
         end
@@ -110,13 +110,13 @@ function F.write(head_path)
         end
         local wpath = head_path .. "/".. fline.path
         if (h == nil) then
-            print("write next", wpath)
+            -- print("write next", wpath)
             h = F.open(wpath, "w")
             p = fline.path
             c = c+1
         else
             if not (p == fline.path) then
-                print("write next", wpath)
+                -- print("write next", wpath)
                 h:close()
                 h = F.open(wpath, "w")
                 p = fline.path
@@ -180,8 +180,13 @@ function F.flat(delim)
 	end
 end
 
-function F.assert_exec(cmd, m)
-    Util:assert_exec(cmd, m)
+function F.sh(cmd)
+    return os.execute(cmd)
+end
+
+function F.nohup(cmd)
+    return os.execute(
+        string.format("nohup %s 2>&1 >> /tmp/sh.nohup.log &", cmd))
 end
 
 function F.mkdir(path)
@@ -190,7 +195,8 @@ function F.mkdir(path)
 end
 
 function F.ln(s, t)
-    Util:exec(string.format("ln -svf %s %s", s, t))
+    Util:exec(string.format(
+        "rm %s && ln -svf %s %s", t, s, t))
 end
 
 function F.cp(s, t)
@@ -215,7 +221,7 @@ function F.arch()
             .build()
         )
         .add(Proc.cull())
-        .run(true)
+        .run()
     for _,i in ipairs(flags) do
         for _,j in ipairs(i) do
             print("arch flag: ", j)

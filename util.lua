@@ -155,22 +155,13 @@ function Util:assert_file_exists(file)
     end
 end
 function Util:assert_exec(cmd, m)
+    print("assert_exec>", cmd)
     local s,err,sig = os.execute(cmd)
-    if err=="exit" then
-        if sig==0 then
-            -- nothing to do
-        else
-            print(err,sig,m)
-            os.exit(sig)
-        end
+    if err == "exit" and sig == 0 then
+        print("assert_exec>", s, err, sig)
     else
-        if err=="signal" then
-            print(err,sig,m)
-            os.exit(sig)
-        else
-            print(err,sig,m)
-            os.exit(sig)
-        end
+        print("assert_exec>", s, err, sig, m)
+        os.exit(sig)
     end
 end
 function Util:assert_pkg_exists(pkg)
@@ -220,7 +211,7 @@ function Util:launch(app)
    Util:log("INFO", exec_log, "out> "..r)
 end
 function Util:exec(cmd)
-	Util:log("INFO", exec_log, "exec> "..cmd)
+    print("exec>", cmd)
 	local h = io.popen(cmd, "r")
 	local r
 	if h == nil then
@@ -332,26 +323,32 @@ function Util:run_co(k, co)
    end
 end
 
-Util.Timer = {
-   epoc = 1,
-   t = 0,
-   fns = {},
-   tick = function(self, interval, fn)
-	  table.insert(self.fns, {fn = fn, i = interval})
-   end,
-   start = function(self)
-	  print("run forever ...")
-	  while true do
-		 for i, fd in ipairs(self.fns) do
-			if (self.t % fd.i) == 0 then
-			   fd.fn()
-			end
-		 end
-		 socket.sleep(self.epoc)
-		 self.t = self.t + 1
-	  end
-   end
-}
+function Util:new_timer()
+    return {
+        epoc_interval = 1,
+        t = 0,
+        fns = {},
+        tick = function(self, interval, fn)
+            table.insert(self.fns, {fn = fn, i = interval})
+        end,
+        start = function(self, tepocs)
+            print("run forever ...")
+            while true do
+                self.t = self.t + 1
+                for i, fd in ipairs(self.fns) do
+                    if (self.t % fd.i) == 0 then
+                        fd.fn()
+                    end
+                end
+                print("epoc", self.t)
+                if not (self.t < tepocs) then
+                    break
+                end
+                Util:sleep(self.epoc_interval)
+            end
+        end
+    }
+end
 
 function Util:sleep(n)
     socket.sleep(n)

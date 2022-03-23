@@ -24,11 +24,12 @@ function F.pipe()
                 if a == nil then
                     e[i] = true
                 else
+                    e[i] = false 
                     ended = false
                 end
                 if trace then
                     print("fn_"..tostring(i)
-                        ,a0, "->", a, e[i])
+                        ,a0, "->", a, e[i], ended)
                 end
 			end
 			if not (a==nil) then
@@ -54,18 +55,14 @@ function F.branch()
 	end
 	function p.build()
 		return function(r)
-			local out, ended = {}, true
+            if r == nil then
+                return r
+            end
+			local out = {}
 			for i = 1, t-1 do
 				out[i] = fn[i](r)
-                if out[i] then
-                    ended = false
-                end
 			end
-            if ended then
-                return nil
-            else
-    			return out
-            end
+            return out
 		end
 	end
 	return p
