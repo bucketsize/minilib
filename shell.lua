@@ -1,6 +1,25 @@
 local Util = require('minilib.util')
 local Proc = require('minilib.process')
 
+_HOME = os.getenv("HOME")
+_PATH = {
+    "/bin/",
+    "/sbin/",
+    "/usr/bin/",
+    "/usr/sbin/",
+    "/usr/local/bin/",
+    "/usr/local/sbin/",
+    "/opt/bin/",
+    "/opt/sbin/",
+    _HOME .. "/.local/bin/",
+}
+_LIBS = {
+    "/usr/lib/pkgconfig/",
+    "/usr/local/lib/pkgconfig/",
+    "/opt/lib/pkgconfig/",
+    "/lib/pkgconfig/"
+} 
+
 local F = {}
 
 function F.cat(path)
@@ -180,6 +199,9 @@ function F.flat(delim)
 	end
 end
 
+--
+-- shell utils --
+-- 
 function F.sh(cmd)
     return os.execute(cmd)
 end
@@ -207,6 +229,16 @@ function F.wget(url)
     Util:exec(string.format("wget %s", url))
 end
 
+function F.github_fetch(user, repo)
+    F.sh(string.format([[
+        b="%s"
+        r="%s"
+        [ -d ~/$r ] || git clone https://github.com/$b/$r.git ~/$r
+		cd ~/$r
+		git pull
+    ]], user, repo))
+end
+
 -- mutually exclusive CPU arch flags
 _ARCH_FLAG = {
     lm = "x86_64",
@@ -224,13 +256,53 @@ function F.arch()
         .run()
     for _,i in ipairs(flags) do
         for _,j in ipairs(i) do
-            print("arch flag: ", j)
             if _ARCH_FLAG[j] then
                 return _ARCH_FLAG[j]
             end
         end
     end
     return "UnknownISA"
+end
+
+function F.path_exists(file)
+	local h = io.open(file, "r")
+	if h == nil then
+		return false
+	end
+	h:close()
+	return true
+end
+
+function F.__file_exists(file, repo)
+    for i,v in ipairs(repo) do
+        local p = v..file
+        -- print("trying>", p)
+        if F.path_exists(p) then
+            return p
+        end
+    end
+    return nil
+end
+
+function F.file_exists(file)
+    return F.__file_exists(file, _PATH)
+end
+
+function F.libs()
+    table.insert(_LIBS, 
+        string.format("/lib/%s-linux-gnu/pkgconfig/", F.arch()))
+    return _LIBS
+end
+
+function F.lib_exists(lib)
+    return F.__file_exists(lib..".pc", F.libs())
+end
+
+function F.assert_file_exists(file)
+    if not F.file_exists(file) then
+        print(file .. " -> required") 
+        os.exit(1)
+    end
 end
 
 function F.split_path(path)

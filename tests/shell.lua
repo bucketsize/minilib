@@ -18,10 +18,14 @@ function test_shell_nohup()
     print(r,sig,code)
     print("done")
 end
+function test_pkgs()
+    print(Sh.file_exists("wget"))
+    print(Sh.lib_exists("libssl"))
+end
 
 test_arch()
 test_shell_launch_app()
 test_shell_nohup()
-
+test_pkgs()
 
 
