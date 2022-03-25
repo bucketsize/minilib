@@ -3,18 +3,13 @@
 package.path = os.getenv("HOME") .. '/?.lua;'
     .. package.path
 
--- local Pr = require("minilib.process")
--- local Notifeir = require("minilib.notifeir")
+local Lr = require("minilib.process_listener")
+local Sh = require("minilib.shell")
 
 function test_listener()
-    Pr.new_listener()("pi", "less", function()
-        Util:exec("weston-flower")
+    Lr.new_listener()("pi", "less", function()
+        Sh.fork("weston-flower")
     end)
 end
 
--- function test_notifeir()
---     Notifeir:notify("test", "gotcja!")
--- end
-
 test_listener()
--- test_notifeir()

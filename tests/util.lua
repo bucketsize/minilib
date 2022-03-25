@@ -6,38 +6,43 @@ package.path = os.getenv("HOME") .. '/?.lua;'
 local Util = require("minilib.util")
 
 function test_split()
-	local ss = Util:split("|jah { 11 | 97 | k5jk|-|+| 1 | |sk-dj|/mnt/foo bar - 1.mp4|", Util.PSV_PAT)
-	Util:printITable(ss)
+	local ss
+    ss = Util:split("and", "gireffe and /mnt/foo bar - 1.mp4andcamel")
+    assert(#ss == 3)
+    ss = Util:split("|", "gireffe | same| /mnt/foo bar - 1.mp4|camel")
+    assert(#ss == 4)
 end
 
 function test_timer()
     local timer = Util.new_timer()
-    timer:tick(2, function() print(2) end)
-    timer:tick(5, function() print(5) end)
-    timer:tick(8, function() print(8) end)
+    local t2, t5, t8 = 0, 0, 0
+    timer:tick(2, function() t2 = t2+1 end)
+    timer:tick(5, function() t5 = t5+1 end)
+    timer:tick(8, function() t8 = t8+1 end)
     timer:start(16)
+    assert(t2 == 8)
+    assert(t5 == 3)
+    assert(t8 == 2)
 end
 
 function test_map()
 	local r
 
 	r = Util:map(function(n) return n*n end, {1,2,3,4})
-	print(r)
-	Util:printOTable(r)
+    assert(Util:eq({1,4,9,16}, r))
 
-	r = Util:map(function(n) return n*n end, {one=1,twe=2,tri=3,fuf=4})
-	print(r)
-	Util:printOTable(r)
+	r = Util:map(function(n) return n*n end, {ein=1,dwei=2,drei=3,funf=4})
+    assert(not Util:eq({1,4,9,16}, r))
+    assert(Util:eq({ein=1,dwei=4,drei=9,funf=16}, r))
 
 	r = Util:filter(function(n) return (n % 2) == 0 end, {1,2,3,4})
-	print(r)
-	Util:printOTable(r)
+    assert(Util:eq({2,4}, r))
 
 	r = Util:fold(function(n, s)
 		s=s+n
 		return s
 	end, {1,2,3,4}, 0)
-	print(r)
+    assert(r == 10)
 end
 
 function test_segpath()

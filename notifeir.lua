@@ -15,6 +15,6 @@ Notifeir = {
     end
 }
 
---notify(arg[1], arg[2])
+--Notifeir:notify(arg[1], arg[2])
 
 return Notifeir

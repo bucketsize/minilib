@@ -211,14 +211,23 @@ function F.nohup(cmd)
         string.format("nohup %s 2>&1 >> /tmp/sh.nohup.log &", cmd))
 end
 
+function F.fork(cmd)
+    return os.execute(
+        string.format("%s 1>&2 >> /tmp/sh.daemon.log &", cmd))
+end
+
 function F.mkdir(path)
     Util:exec(
         string.format("mkdir -pv %s", path))
 end
 
 function F.ln(s, t)
-    Util:exec(string.format(
-        "rm %s && ln -svf %s %s", t, s, t))
+    F.sh(string.format([[
+        s=%s
+        t=%s
+        [ -L $t ] && rm $t
+        ln -svf $s $t
+    ]], s, t))
 end
 
 function F.cp(s, t)

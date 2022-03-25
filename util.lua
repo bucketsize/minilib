@@ -2,16 +2,16 @@ local socket = require("socket")
 local Ot = require("minilib.otable")
 
 local Util={}
-function Util:tofile(file, ot)
+function Util:tofile(file, t)
    local h = assert(io.open(file, 'w'))
-   for k, v in ot:opairs() do
+   for k, v in pairs(t) do
 	  h:write(string.format('%s => %s\n', k, v))
    end
    h:close()
 end
 function Util:fromfile(file)
    local h = assert(io.open(file, 'r'))
-   local r = Ot.newT()
+   local r = {} 
    for l in h:lines() do
 	  local k, v = string.match(l, "(.+) => (.+)")
 	  r[k] = v
@@ -19,23 +19,49 @@ function Util:fromfile(file)
    h:close()
    return r
 end
-function Util:segpath(path)
-   function __segpath(a, path)
+function Util:size(t)
+    if #t > 0 and t[#t+1] == nil then 
+        return #t
+    else
+        local c = 0
+        for i,v in pairs(t) do
+            c = c + 1
+        end
+        return c
+    end
+end
+function Util:eq(o1, o2)
+    if #o1 ~= #o2 then
+        return false
+    end
+    for k, v in pairs(o1) do
+        if o2[k] and o2[k] == v then
+        else
+            return false
+        end
+    end
+    return true
+end
+function Util:split(sep, path)
+   function __split(sep, a, path)
 	  local l = string.len(path)
-	  local s,f = string.find(path, "/")
-	  if not f then
-		 table.insert(a, path)
-	  else
+	  local s, f = path:find(sep)
+      -- print("__split.i:", s, f)
+	  if f then
 		 if f > 1 then
 			local p = string.sub(path, 0, s-1)
 			table.insert(a, p)
 		 end
-		 __segpath(a, string.sub(path, f+1))
+		 return __split(sep, a, string.sub(path, f+1))
+	  else
+		 table.insert(a, path)
+         return a
 	  end
    end
-   local a = {}
-   __segpath(a, path)
-   return a
+   return __split(sep, {}, path)
+end
+function Util:segpath(path)
+    return Util:split("/", path)
 end
 function Util:head(itable)
     if #itable == 0 then
@@ -78,7 +104,7 @@ function Util:filter(f, t)
 	local r = {}
 	for k, v in pairs(t) do
 		if f(v) then
-			r[k] = v
+			table.insert(r, v)
 		end
 	end
 	return r
@@ -143,17 +169,15 @@ function Util:grep(file, pattern)
    end
 end
 
-local exec_log = "/var/tmp/exec.out"
 function Util:launch(app)
    local cmd = string.format("nohup setsid %s > /dev/null &"
     , app:gsub("%%U", "/var/tmp")
     , exec_log)
-   Util:log("INFO", exec_log, "exec> "..cmd)
+   print("exec>", cmd)
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")
    socket.sleep(1) -- for some reason needed so exit can nohup process to 1
    h:close()
-   Util:log("INFO", exec_log, "out> "..r)
 end
 function Util:exec(cmd)
     print("exec>", cmd)
@@ -189,13 +213,6 @@ function Util:stream_file(cmd, fn)
    end
    h:close()
    return r
-end
-function Util:split(str, pat)
-	local arr = {}
-	for i in string.gmatch(str, pat) do
-		table.insert(arr, i)
-	end
-	return arr
 end
 function Util:join(tag, list)
 	local s=""
@@ -241,21 +258,6 @@ function Util:printOTable(t)
 		end
 	end
 end
-
-Util.PSV_PAT='([%a%s%d-+_{}./]+)|'
-Util.FILENAME_PAT='/([%a%d%s+=-_\\.\\]*)$'
--- CHILLCODE™
-
-
--- print(Util:read("/proc/cpuinfo", "r"))
--- print(Util:exec("ls -l", "r"))
-
--- local cmd = string.format("~/scripts/pam_auth %s %s", "jb", "1234")
--- local r = Util:exec(cmd)
--- print(r)
--- local s = string.match(r, "status:%s(%w+)%c")
--- print('|' .. s ..'|')
-
 function Util:run_co(k, co)
    local status = coroutine.status(co)
 	 if (status == 'dead') and (not co.dead) then
@@ -277,7 +279,7 @@ function Util:new_timer()
             table.insert(self.fns, {fn = fn, i = interval})
         end,
         start = function(self, tepocs)
-            print("run forever ...")
+            print("timer started:", self)
             while true do
                 self.t = self.t + 1
                 for i, fd in ipairs(self.fns) do
@@ -285,7 +287,7 @@ function Util:new_timer()
                         fd.fn()
                     end
                 end
-                print("epoc", self.t)
+                -- print("epoc", self.t)
                 if not (self.t < tepocs) then
                     break
                 end
