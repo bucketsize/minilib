@@ -44,19 +44,17 @@ function Util:eq(o1, o2)
 end
 function __find_all(sep, a, i, path)
     local s, f = path:find(sep, i)
-    -- print(path)
-    -- print(i, s, f)
+    -- print(path, i, s, f)
     if f then
         table.insert(a, {s, f})
-        return __find_all(sep, a, f, path)
+        return __find_all(sep, a, f+1, path)
     else
         return a
     end
 end
 function __split(sep, a, i, path, opt)
     local s, f = path:find(sep, i, opt.plain)
-    -- print(path)
-    -- print(i, s, f)
+    -- print(path, i, s, f)
     if f then
         table.insert(a, path:sub(i, s-1))
         return __split(sep, a, f+1, path, opt)
@@ -82,7 +80,7 @@ function Util:split(sep, path, opt)
             opt.plain = not opt.regex
         end
     end
-    print("split opts:", opt.regex, opt.plain)
+    -- print("split opts:", opt.regex, opt.plain)
     return __split(sep, {}, 1, path, opt)
 end
 function Util:segpath(path)
