@@ -7,10 +7,18 @@ local Util = require("minilib.util")
 
 function test_split()
 	local ss
+    
     ss = Util:split("and", "gireffe and /mnt/foo bar - 1.mp4andcamel")
-    assert(#ss == 3)
+    Util:printITable(ss)
+    assert(Util:eq({"gireffe "," /mnt/foo bar - 1.mp4","camel"}, ss))
+
     ss = Util:split("|", "gireffe | same| /mnt/foo bar - 1.mp4|camel")
-    assert(#ss == 4)
+    Util:printITable(ss)
+    assert(Util:eq({"gireffe "," same"," /mnt/foo bar - 1.mp4","camel"}, ss))
+    
+    ss = Util:split(".", "gireffe . same. /mnt/foo bar - 1.mp4.camel", {regex=false})
+    Util:printITable(ss)
+    assert(Util:eq({"gireffe "," same"," /mnt/foo bar - 1","mp4","camel"}, ss))
 end
 
 function test_timer()
@@ -58,7 +66,26 @@ function test_strip()
 	print(string.format("|%s|", Util:strip("   lo i am a doctor 	")))
 	print(string.format("|%s|", Util:strip("    	der maus speilt nie klavier   ")))
 end
+function test_find_all()
+    local x, as
 
+    x = Util:find_all("and", "this and that and something, and")
+    as = {{6,8}, {15,17}, {30,32}}
+    for i,j in ipairs(x) do
+        assert(Util:eq(as[i], j))
+    end
+    
+    x = Util:find_all("and", "and that the hen and the fox were friends, and...")
+    as = {{1,3}, {18,20}, {44,46}}
+    for i,j in ipairs(x) do
+        assert(Util:eq(as[i], j))
+    end
+    
+    x = Util:find_all("mojo", "and that the hen and the fox were friends, and...")
+    assert(Util:size(x) == 0)
+end
+
+test_find_all()
 test_split()
 test_map()
 test_segpath()

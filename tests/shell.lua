@@ -5,6 +5,28 @@ package.path = os.getenv("HOME") .. '/?.lua;'
 
 local Sh = require("minilib.shell")
 
+function test_split_path()
+    local x
+
+    x = Sh.split_path("totem")
+    print(x)
+    assert("totem" == x)
+
+    x, y = Sh.split_path("/var/tmp/totem")
+    print(x, y)
+    assert("totem" == x)
+    assert("/var/tmp" == y)
+    
+    x, y = Sh.split_path("/var/tmp bin/.totem")
+    print(x, y)
+    assert(".totem" == x)
+    assert("/var/tmp bin" == y)
+    
+    x, y = Sh.split_path("var/tmp/totem.bin")
+    print(x, y)
+    assert("totem.bin" == x)
+    assert("var/tmp" == y)
+end
 function test_arch()
     print("system architecture:", Sh.arch())
 end
@@ -31,6 +53,7 @@ function test_ln()
     Sh.ln ("/etc/hosts", "/var/tmp/dns.cfg")
 end
 
+test_split_path()
 test_arch()
 test_shell_launch_app()
 test_shell_nohup()

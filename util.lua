@@ -42,23 +42,48 @@ function Util:eq(o1, o2)
     end
     return true
 end
-function Util:split(sep, path)
-   function __split(sep, a, path)
-	  local l = string.len(path)
-	  local s, f = path:find(sep)
-      -- print("__split.i:", s, f)
-	  if f then
-		 if f > 1 then
-			local p = string.sub(path, 0, s-1)
-			table.insert(a, p)
-		 end
-		 return __split(sep, a, string.sub(path, f+1))
-	  else
-		 table.insert(a, path)
-         return a
-	  end
-   end
-   return __split(sep, {}, path)
+function __find_all(sep, a, i, path)
+    local s, f = path:find(sep, i)
+    -- print(path)
+    -- print(i, s, f)
+    if f then
+        table.insert(a, {s, f})
+        return __find_all(sep, a, f, path)
+    else
+        return a
+    end
+end
+function __split(sep, a, i, path, opt)
+    local s, f = path:find(sep, i, opt.plain)
+    -- print(path)
+    -- print(i, s, f)
+    if f then
+        table.insert(a, path:sub(i, s-1))
+        return __split(sep, a, f+1, path, opt)
+    else
+        if #path > i then
+            table.insert(a, path:sub(i))
+        end
+        return a
+    end
+end
+function Util:find_all(sep, path)
+    return __find_all(sep, {}, 1, path)
+end
+function Util:split(sep, path, opt)
+    if not opt then
+        opt = {regex=true, plain=false}
+    else
+        if opt.regex == nil then
+            opt.regex = true
+            opt.plain = false
+        end
+        if opt.plain == nil then
+            opt.plain = not opt.regex
+        end
+    end
+    print("split opts:", opt.regex, opt.plain)
+    return __split(sep, {}, 1, path, opt)
 end
 function Util:segpath(path)
     return Util:split("/", path)

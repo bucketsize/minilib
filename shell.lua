@@ -315,9 +315,14 @@ function F.assert_file_exists(file)
 end
 
 function F.split_path(path)
-    local li  = Util:reverse(Util:segpath(path))
-    local b,p = Util:head(li),
-        "/"..Util:join("/", Util:reverse(Util:tail(li)))
+    local pi = Util:find_all("/", path)
+    if #pi == 0 then
+        return path
+    end
+    local i  = pi[#pi]
+    local b, p = 
+        path:sub(i[2]+1),
+        path:sub(0, i[1]-1)
     return b,p
 end
 
