@@ -38,14 +38,18 @@ function F.cat(path)
 end
 
 function F.exec(path)
-   local h = assert(io.popen(path))
-   return function()
-	  local l = h:read("*line")
-	  if l == nil then
-		 h:close()
-	  end
-	  return l
-   end
+	local h = assert(io.popen(path))
+	return function()
+		local l = nil
+		if h then 
+			l = h:read("*line")
+			if l == nil then
+				h:close()
+				h = nil
+			end
+		end
+		return l
+	end
 end
 
 function F.find(path)
@@ -154,25 +158,29 @@ end
 
 function F.grep(patt)
 	return function(s)
-		local r = {}
         if s == nil then
-            return r
+            return nil
         end
+		local r = {}
 		r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10] = string.match(s, patt)
-		if r[1] == nil then return nil end
+		if r[1] == nil then
+			return nil
+		end
 		return r
 	end
 end
 
 function F.echo()
+	local i = 0
 	return function(s)
+		i = i + 1
 		if type(s) == 'function' then
-			print('function')
+			print(tostring(i), 'function')
 		else
 			if type(s) == 'table' then
-				print(listToString(s))
+				print(tostring(i), listToString(s))
 			else
-				print(s)
+				print(tostring(i), s)
 			end
 		end
 		return s

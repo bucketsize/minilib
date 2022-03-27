@@ -70,8 +70,17 @@ function test_pipe_2()
     print(m2)
 end
 
+function test_pipe_3()
+	local iv = Pr.pipe()
+		.add(Sh.exec('pactl list sinks'))
+		.add(Sh.grep('Name.*'))
+		.add(Sh.echo())
+		.run()
+	assert(#iv > 0)
+end
 
 test_cat()
 test_pipe_1()
 test_pipe_2()
+test_pipe_3()
 test_arch()

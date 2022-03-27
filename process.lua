@@ -15,12 +15,12 @@ function F.pipe()
 	end
 	function p.run(trace)
 		local a, s = nil, nil
-        local ended = false
+		local ended = false
 		while not ended do
-            ended = true
+			ended = true
 			for i = 1, t-1 do
                 local a0 = a
-                a = fn[i](a)
+				a = fn[i](a)
                 if a == nil then
                     e[i] = true
                 else
@@ -29,7 +29,7 @@ function F.pipe()
                 end
                 if trace then
                     print("fn_"..tostring(i)
-                        ,a0, "->", a, e[i], ended)
+                        ,a0, "->", a, e[i])
                 end
 			end
 			if not (a==nil) then
