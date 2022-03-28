@@ -1,5 +1,4 @@
 local socket = require("socket")
-local Ot = require("minilib.otable")
 
 local Util={}
 function Util:tofile(file, t)

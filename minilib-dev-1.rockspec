@@ -17,9 +17,10 @@ build = {
 		lua = {
 			["minilib.util"] = "util.lua",
 			["minilib.process"] = "process.lua",
+			["minilib.process_listener"] = "process_listener.lua",
 			["minilib.shell"] = "shell.lua",
+			["minilib.sgrid"] = "sgrid.lua",
 			["minilib.json"] = "json.lua",
-			["minilib.otable"] = "otable.lua",
 			["minilib.cmd_server"] = "cmd_server.lua",
 			["minilib.cmd_client"] = "cmd_client.lua"
 		}

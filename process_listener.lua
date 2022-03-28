@@ -1,34 +1,30 @@
-local Util = require('minilib.util')
+local Ut = require('minilib.util')
+local Sh = require('minilib.shell')
 
 local F = {}
 
+
 function F.new_listener()
-    return function(user, ps_name, fn)
-        local started = false
+	local L = {callback={}}
+	function L.listen(user, ps_name, event, fn)
+		put_elem(L.callback, {user, ps_name, event}, fn)
+	end
+	function L.start()
         while true do
-            local pid = Util:exec(
+            local pid = Sh.sh(
                 string.format("pgrep %s | head -1", ps_name))
-            print("listener pid=", pid)
-            if not started then
-                if not (pid == "") then
-                    local uid = Util:strip(Util:exec(
-                        string.format("ps -o user= -p %s", pid)))
-                    print("listener uid=", uid)
-                    if (uid == user..'\n') then
-                        print("listener: startup detected:", pid, uid, ps_name)
-                        started = true
-                        fn()
-                    end
-                end
-            else
-                if (pid == "") then
-                    print("listener: exit detected:", pid, ps_name)
-                    started = false
-                end
-            end
+			if not (pid == "") then
+				local uid = Util:strip(Util:sh(
+					string.format("ps -o user= -p %s", pid)))
+				print("listener ", pid, uid, "start", ps_name)
+				fn = get_elem(L.callback, {uid, pid, start}) 
+				if fn then
+					fn()
+				end
+			end
             Util:sleep(2)
         end
-    end
+	end
 end
 
 return F
