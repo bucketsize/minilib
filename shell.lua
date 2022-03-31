@@ -224,6 +224,19 @@ function F.fork(cmd)
         string.format("%s 1>&2 >> /tmp/sh.daemon.log &", cmd))
 end
 
+function F.launch(app)
+   local cmd = string.format("nohup setsid %s > /dev/null &"
+    , app
+		:gsub("%%F", "")
+		:gsub("%%U", "~/")
+    , exec_log)
+   print("exec>", cmd)
+   local h = assert(io.popen(cmd, "r"))
+   local r = h:read("*a")
+   Util.sleep(1) -- for some reason needed so exit can nohup process to 1
+   h:close()
+end
+
 function F.mkdir(path)
     Util:exec(
         string.format("mkdir -pv %s", path))

@@ -191,16 +191,6 @@ function Util:grep(file, pattern)
    end
 end
 
-function Util:launch(app)
-   local cmd = string.format("nohup setsid %s > /dev/null &"
-    , app:gsub("%%U", "/var/tmp")
-    , exec_log)
-   print("exec>", cmd)
-   local h = assert(io.popen(cmd, "r"))
-   local r = h:read("*a")
-   socket.sleep(1) -- for some reason needed so exit can nohup process to 1
-   h:close()
-end
 function Util:exec(cmd)
     print("exec>", cmd)
 	local h = io.popen(cmd, "r")
@@ -313,14 +303,12 @@ function Util:new_timer()
                 if not (self.t < tepocs) then
                     break
                 end
-                Util:sleep(self.epoc_interval)
+                Util.sleep(self.epoc_interval)
             end
         end
     }
 end
 
-function Util:sleep(n)
-    socket.sleep(n)
-end
+Util.sleep = socket.sleep
 
 return Util

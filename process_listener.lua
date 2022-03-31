@@ -24,7 +24,7 @@ function F.new_listener()
 					fn()
 				end
 			end
-            Util:sleep(2)
+            Util.sleep(2)
         end
 	end
 	return L
