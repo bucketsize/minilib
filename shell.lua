@@ -209,28 +209,38 @@ end
 
 --
 -- shell utils --
--- 
+--
+local EXEC_FORMAT={
+	sh     = "sh -c '%s'",
+	nohup  = "nohup %s 2>&1 >> /tmp/sh.nohup.log &",
+	fork   = "%s 1>&2 >> /tmp/sh.daemon.log &",
+	launch = "nohup setsid %s > /dev/null &"
+}
+function F.__exec(cmd)
+	local h = io.popen(cmd, "r")
+	for l in h:lines() do
+		print(l)
+	end
+	h:close()
+end
 function F.sh(cmd)
-    return os.execute(cmd)
+	F.__exec(string.format(EXEC_FORMAT["sh"], cmd))
 end
 
 function F.nohup(cmd)
-    return os.execute(
-        string.format("nohup %s 2>&1 >> /tmp/sh.nohup.log &", cmd))
+	F.__exec(string.format(EXEC_FORMAT["nohup"], cmd))
 end
 
 function F.fork(cmd)
-    return os.execute(
-        string.format("%s 1>&2 >> /tmp/sh.daemon.log &", cmd))
+	F.__exec(string.format(EXEC_FORMAT["fork"], cmd))
 end
 
 function F.launch(app)
-   local cmd = string.format("nohup setsid %s > /dev/null &"
+   local cmd = string.format(EXEC_FORMAT["launch"]
     , app
 		:gsub("%%F", "")
 		:gsub("%%U", "~/")
     , exec_log)
-   print("exec>", cmd)
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")
    Util.sleep(1) -- for some reason needed so exit can nohup process to 1
@@ -238,8 +248,7 @@ function F.launch(app)
 end
 
 function F.mkdir(path)
-    Util:exec(
-        string.format("mkdir -pv %s", path))
+    F.__exec(string.format("mkdir -pv %s", path))
 end
 
 function F.ln(s, t)
@@ -252,11 +261,11 @@ function F.ln(s, t)
 end
 
 function F.cp(s, t)
-    Util:exec(string.format("cp -vb %s %s", s, t))
+    F.__exec(string.format("cp -vb %s %s", s, t))
 end
 
 function F.wget(url)
-    Util:exec(string.format("wget %s", url))
+    F.__exec(string.format("wget %s", url))
 end
 
 function F.github_fetch(user, repo)
