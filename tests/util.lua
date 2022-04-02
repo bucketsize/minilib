@@ -1,9 +1,9 @@
 #!/usr/bin/env lua
+package.path = '?.lua;' .. package.path
+require "luarocks.loader"
+luaunit = require('luaunit')
 
-package.path = os.getenv("HOME") .. '/?.lua;'
-    .. package.path
-
-local Util = require("minilib.util")
+local Util = require("util")
 
 function test_split()
 	local ss
@@ -85,9 +85,4 @@ function test_find_all()
     assert(Util:size(x) == 0)
 end
 
-test_find_all()
-test_split()
-test_map()
-test_segpath()
-test_strip()
-test_timer()
+os.exit( luaunit.LuaUnit.run() )

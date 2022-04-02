@@ -1,11 +1,11 @@
 #!/usr/bin/env lua
+package.path = '?.lua;' .. package.path
+require "luarocks.loader"
+luaunit = require('luaunit')
 
-package.path = os.getenv("HOME") .. '/?.lua;'
-    .. package.path
-
-local Pr = require("minilib.process")
-local Sh = require("minilib.shell")
-local Util = require("minilib.util")
+local Pr = require("process")
+local Sh = require("shell")
+local Util = require("util")
 
 function test_arch()
     print("system architecture:", Sh.arch())
@@ -79,8 +79,4 @@ function test_pipe_3()
 	assert(#iv > 0)
 end
 
-test_cat()
-test_pipe_1()
-test_pipe_2()
-test_pipe_3()
-test_arch()
+os.exit( luaunit.LuaUnit.run() )

@@ -212,7 +212,7 @@ end
 --
 local EXEC_FORMAT={
 	sh     = "sh -c '%s'",
-	nohup  = "nohup %s 2>&1 >> /tmp/sh.nohup.log &",
+	nohup  = "nohup %s 1 > /tmp/sh.nohup.log 2 > /tmp/sh.nohup.log &",
 	fork   = "%s 1>&2 >> /tmp/sh.daemon.log &",
 	launch = "nohup setsid %s > /dev/null &"
 }
@@ -222,6 +222,30 @@ function F.__exec(cmd)
 		print(l)
 	end
 	h:close()
+end
+function F.pgrep(s)
+	local p, r = false, {}
+	local h = io.popen(string.format("pgrep -l %s", s), "r")
+	for l in h:lines() do
+		if l and l ~= "" then
+			table.insert(r, l)
+			p = true
+		end
+	end
+	h:close()
+	return p, r
+end
+function F.kill(pid, sig)
+	if not sig then
+		sig=9
+	end
+	F.__exec(string.format("kill -%s %s", sig, pid))
+end
+function F.killall(exe, sig)
+	if not sig then
+		sig=9
+	end
+	F.__exec(string.format("killall -%s %s", sig, exe))
 end
 function F.sh(cmd)
 	F.__exec(string.format(EXEC_FORMAT["sh"], cmd))

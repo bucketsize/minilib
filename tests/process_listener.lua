@@ -1,10 +1,10 @@
 #!/usr/bin/env lua
+package.path = '?.lua;' .. package.path
+require "luarocks.loader"
+luaunit = require('luaunit')
 
-package.path = os.getenv("HOME") .. '/?.lua;'
-    .. package.path
-
-local Lr = require("minilib.process_listener")
-local Sh = require("minilib.shell")
+local Lr = require("process_listener")
+local Sh = require("shell")
 
 function test_listener()
     Lr.new_listener()
@@ -14,4 +14,4 @@ function test_listener()
 		.start()
 end
 
-test_listener()
+os.exit( luaunit.LuaUnit.run() )

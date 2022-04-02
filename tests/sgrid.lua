@@ -1,9 +1,9 @@
 #!/usr/bin/env lua
+package.path = '?.lua;' .. package.path
+require "luarocks.loader"
+luaunit = require('luaunit')
 
-package.path = os.getenv("HOME") .. '/?.lua;'
-    .. package.path
-
-local Sg = require("minilib.sgrid")
+local Sg = require("sgrid")
 
 function test_sgrid()
 	local sg = {}
@@ -28,5 +28,5 @@ function test_sgrid()
 	assert(Sg.get_elem(sg, {"two"}) == "two")
 end
 
-test_sgrid()
+os.exit( luaunit.LuaUnit.run() )
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env lua
+package.path = '?.lua;' .. package.path
+require "luarocks.loader"
+luaunit = require('luaunit')
 
-package.path = os.getenv("HOME") .. '/?.lua;'
-    .. package.path
-
-local Util = require("minilib.util")
+local Util = require("util")
 
 function test_exec_sh_cmd()
     local r = Util:exec("ls -l ~/")
@@ -11,4 +11,4 @@ function test_exec_sh_cmd()
     print("done")
 end
 
-test_exec_sh_cmd()
+os.exit( luaunit.LuaUnit.run() )
