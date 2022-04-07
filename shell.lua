@@ -2,6 +2,7 @@ local Util = require('minilib.util')
 local Proc = require('minilib.process')
 
 _HOME = os.getenv("HOME")
+_DEBUG = os.getenv("DEBUG_LUA")
 _PATH = {
     "/bin/",
     "/sbin/",
@@ -212,11 +213,14 @@ end
 --
 local EXEC_FORMAT={
 	sh     = "sh -c '%s'",
-	nohup  = "nohup %s 1 > /tmp/sh.nohup.log 2 > /tmp/sh.nohup.log &",
-	fork   = "%s 1>&2 >> /tmp/sh.daemon.log &",
+	nohup  = "nohup %s &",
+	fork   = "%s &",
 	launch = "nohup setsid %s > /dev/null &"
 }
 function F.__exec(cmd)
+	if _DEBUG then
+		print("exec>", cmd)
+	end
 	local h = io.popen(cmd, "r")
 	for l in h:lines() do
 		print(l)
@@ -252,11 +256,11 @@ function F.sh(cmd)
 end
 
 function F.nohup(cmd)
-	F.__exec(string.format(EXEC_FORMAT["nohup"], cmd))
+	os.execute(string.format(EXEC_FORMAT["nohup"], cmd))
 end
 
 function F.fork(cmd)
-	F.__exec(string.format(EXEC_FORMAT["fork"], cmd))
+	os.execute(string.format(EXEC_FORMAT["fork"], cmd))
 end
 
 function F.launch(app)
