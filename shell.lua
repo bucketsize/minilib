@@ -267,7 +267,9 @@ function F.launch(app)
    local cmd = string.format(EXEC_FORMAT["launch"]
     , app
 		:gsub("%%F", "")
-		:gsub("%%U", "~/")
+		:gsub("%%f", "")
+		:gsub("%%U", "")
+		:gsub("%%u", "")
     , exec_log)
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")

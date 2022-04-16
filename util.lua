@@ -29,6 +29,20 @@ function Util:size(t)
         return c
     end
 end
+function Util:keys(t)
+	local c = {}
+	for i,_ in pairs(t) do
+		table.insert(c, i)
+	end
+	return c
+end
+function Util:values(t)
+	local c = {}
+	for _,i in pairs(t) do
+		table.insert(c, i)
+	end
+	return c
+end
 function Util:eq(o1, o2)
     if #o1 ~= #o2 then
         return false
