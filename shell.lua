@@ -198,11 +198,11 @@ function F.flat(delim)
 	return function(list)
 		local s = ''
 		for i,v in pairs(list) do
-				if i == 1 then
-					s = s .. v
-				else
-					s = s .. delim .. v
-				end
+			if i == 1 then
+				s = s .. v
+			else
+				s = s .. delim .. v
+			end
 		end
 		return s
 	end
@@ -254,26 +254,31 @@ end
 function F.sh(cmd)
 	F.__exec(string.format(EXEC_FORMAT["sh"], cmd))
 end
-
 function F.nohup(cmd)
 	os.execute(string.format(EXEC_FORMAT["nohup"], cmd))
 end
-
 function F.fork(cmd)
 	os.execute(string.format(EXEC_FORMAT["fork"], cmd))
 end
-
+function F.forkonce(exe, args)
+	if not F.pgrep(exe) then
+		if args then
+			F.fork(string.format("%s %s", exe, args))
+		else
+			F.fork(exe)
+		end
+	end
+end
 function F.launch(app)
    local cmd = string.format(EXEC_FORMAT["launch"]
     , app
 		:gsub("%%F", "")
 		:gsub("%%f", "")
 		:gsub("%%U", "")
-		:gsub("%%u", "")
-    , exec_log)
+		:gsub("%%u", ""))
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")
-   Util.sleep(1) -- for some reason needed so exit can nohup process to 1
+   Util.sleep(0.5) -- for some reason needed so exit can nohup process to 1
    h:close()
 end
 
