@@ -269,6 +269,16 @@ function Util:strip(str)
 		end
 	end
 end
+function Util:wminfo()
+   local h = assert(io.popen("wmctrl -m"))
+   local wm
+   for line in h:lines() do
+	  wm = line:match("Name:%s(%w+)")
+	  if wm then break end
+   end
+   return {wm=wm}
+end
+
 function Util:printITable(t)
 	for i,v in ipairs(t) do
 		print(i .. ': ', v)
