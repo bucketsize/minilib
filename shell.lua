@@ -282,8 +282,20 @@ function F.launch(app)
    h:close()
 end
 
+function F.test(path) 
+	local h = io.open(path, "r")
+	if not h then return nil end
+	local s, e, ec = h:read()
+	if s then return "file" end
+	if e then return "dir" end
+end
+
 function F.mkdir(path)
     F.__exec(string.format("mkdir -pv %s", path))
+end
+
+function F.rm(path)
+    F.__exec(string.format("rm -v %s", path))
 end
 
 function F.ln(s, t)
@@ -296,11 +308,18 @@ function F.ln(s, t)
 end
 
 function F.cp(s, t)
-    F.__exec(string.format("cp -vb %s %s", s, t))
+    F.__exec(string.format("cp -v %s %s", s, t))
+end
+function F.mv(s, t)
+    F.__exec(string.format("mv -v %s %s", s, t))
 end
 
-function F.wget(url)
-    F.__exec(string.format("wget %s", url))
+function F.wget(url, name)
+	if name then
+	    F.__exec(string.format("wget -O %s %s", name, url))
+	else
+	    F.__exec(string.format("wget %s", url))
+	end
 end
 
 function F.github_fetch(user, repo)

@@ -185,6 +185,17 @@ function Util:read(filename)
    end
    return r
 end
+function Util:head_file(filename)
+   local h = io.open(filename, "r")
+   local r
+   if h then
+	  r = h:read("*l")
+	  h:close()
+   else
+	  r = nil
+   end
+   return r
+end
 function Util:log(level, file, msg)
    local h = assert(io.open(file, "a"))
    h:write(string.format("%s - %s - %s\n", os.date("%Y-%m-%dT%H:%M:%S+05:30"), level, msg))
