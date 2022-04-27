@@ -321,7 +321,10 @@ function F.wget(url, name)
 	    F.__exec(string.format("wget %s", url))
 	end
 end
-
+function F.basename(path)
+	local ps = Util:segpath(path)
+	return ps[#ps]
+end
 function F.github_fetch(user, repo)
     F.sh(string.format([[
         b="%s"
