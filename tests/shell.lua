@@ -75,5 +75,18 @@ function test_08_pgrep()
 	end
 end
 
+function test_09_exec_cb()
+	Sh.__exec("ls -l ~/")
+	Sh.__exec_cb("ls -l ~/", function(x)
+		print("|yea> "..x)
+	end)
+end
+
+function test_10_groups()
+	local gs = Sh.groups()
+	Ut:printITable(gs)
+	assert(#gs > 0)
+end
+
 os.exit( luaunit.LuaUnit.run() )
 

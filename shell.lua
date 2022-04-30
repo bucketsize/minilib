@@ -2,6 +2,7 @@ local Util = require('minilib.util')
 local Proc = require('minilib.process')
 
 _HOME = os.getenv("HOME")
+_USER = os.getenv("USER")
 _DEBUG = os.getenv("DEBUG_LUA")
 _PATH = {
     "/bin/",
@@ -21,7 +22,7 @@ _LIBS = {
     "/lib/pkgconfig/"
 } 
 
-local F = {}
+local F = {HOME=_HOME, USER=_USER}
 
 function F.cat(path)
    local h = assert(io.open(path, 'r'))
@@ -217,15 +218,18 @@ local EXEC_FORMAT={
 	fork   = "%s &",
 	launch = "nohup setsid %s > /dev/null &"
 }
-function F.__exec(cmd)
+function F.__exec_cb(cmd, fn)
 	if _DEBUG then
 		print("exec>", cmd)
 	end
 	local h = io.popen(cmd, "r")
 	for l in h:lines() do
-		print(l)
+		fn(l)
 	end
 	h:close()
+end
+function F.__exec(cmd)
+	F.__exec_cb(cmd, print)
 end
 function F.pgrep(s)
 	local p, r = false, {}
@@ -324,6 +328,15 @@ end
 function F.basename(path)
 	local ps = Util:segpath(path)
 	return ps[#ps]
+end
+function F.groups()
+	local gs = {}
+	F.__exec_cb("groups", function(c)
+		if c then
+			gs = Util:split(" ", c)
+		end
+	end)
+	return gs
 end
 function F.github_fetch(user, repo)
     F.sh(string.format([[
