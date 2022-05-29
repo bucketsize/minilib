@@ -7,24 +7,24 @@ local Pr = require("process")
 local Sh = require("shell")
 local Util = require("util")
 
-function test_arch()
+function test_1_arch()
     print("system architecture:", Sh.arch())
 end
 
-function test_cat()
+function test_2_cat()
 	local cat = Sh.cat('/proc/meminfo')
 	print(type(cat))
 	assert(cat())
 	assert(cat())
 end
 
-function test_pipe_1()
+function test_3_pipe_1()
 	local m1,m2
 	local r = Pr.pipe()
 		.add(Sh.cat('/proc/meminfo'))
 		.add(Pr.branch()
-			.add(Sh.grep('Buffers'))
-			.add(Sh.grep('Cached'))
+			.add(Sh.grep('Buffers.*'))
+			.add(Sh.grep('Cached.*'))
 			.build())
 		.add(Pr.cull())
 		.add(function(list)
@@ -44,7 +44,7 @@ function test_pipe_1()
     print(m2)
 end
 
-function test_pipe_2()
+function test_3_pipe_2()
 	local m1,m2
 	local r = Pr.pipe()
 		.add(Sh.exec('lscpu'))
@@ -70,13 +70,20 @@ function test_pipe_2()
     print(m2)
 end
 
-function test_pipe_3()
+function test_3_pipe_3()
 	local iv = Pr.pipe()
 		.add(Sh.exec('pactl list sinks'))
 		.add(Sh.grep('Name.*'))
 		.add(Sh.echo())
 		.run()
 	assert(#iv > 0)
+end
+
+function test_4_find()
+    Pr.pipe()
+        .add(Sh.find("/etc/", "*.xml"))
+		.add(Sh.echo())
+        .run()
 end
 
 os.exit( luaunit.LuaUnit.run() )

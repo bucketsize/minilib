@@ -54,10 +54,18 @@ function F.exec(path)
 	end
 end
 
-function F.find(path)
-    local cmd = string.format(
-        "find %s -type f -exec grep -Iq . {} \\; -print",
-        path)
+function F.find(path, pattern)
+	local cmd = ""
+	if pattern == nil then
+		cmd = string.format(
+			"find %s -type f -exec grep -Iq . {} \\; -print",
+			path)
+	else
+		cmd = string.format(
+			"find %s -type f -name \"%s\" -exec grep -Iq . {} \\; -print",
+			path, pattern)
+	end
+	print(".find", cmd)
     local h = assert(io.popen(cmd))
     return function()
         if h == nil then
@@ -350,27 +358,33 @@ end
 
 -- mutually exclusive CPU arch flags
 _ARCH_FLAG = {
-    lm = "x86_64",
+    GenuineIntel = "x86_64",
+    AuthenticAMD = "x86_64",
     BCM2835 = "aarch64" 
 }
 function F.arch()
-    local flags = Proc.pipe()
+    local parch = "unknown-isa"
+	Proc.pipe()
 	    .add(F.cat("/proc/cpuinfo"))
         .add(Proc.branch()
             .add(F.grep("BCM2835"))
-            .add(F.grep("lm"))
+            .add(F.grep("GenuineIntel"))
+            .add(F.grep("AuthenticAMD"))
             .build()
         )
         .add(Proc.cull())
-        .run()
-    for _,i in ipairs(flags) do
-        for _,j in ipairs(i) do
-            if _ARCH_FLAG[j] then
-                return _ARCH_FLAG[j]
+		.add(function(list)
+            if list == nil then
+                return list
             end
-        end
-    end
-    return "UnknownISA"
+			for i, v in pairs(list) do
+				-- print("cpuarch>", i, v[1])
+				if v ~= nil then parch=_ARCH_FLAG[v[1]] end
+			end
+			return list
+        end)
+        .run()
+	return parch
 end
 
 function F.path_exists(file)
