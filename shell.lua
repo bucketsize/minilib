@@ -93,6 +93,7 @@ function F.read()
             end
         end
         if h == nil then
+			if p == 1 then return nil end
             h = assert(io.open(paths[p], "r"))
         end
         local l = h:read("*line")
@@ -240,8 +241,8 @@ function F.__exec(cmd)
 	F.__exec_cb(cmd, print)
 end
 function F.pgrep(s)
-	local p, r = false, {}
-	local h = io.popen(string.format("pgrep -l %s", s), "r")
+	local p, r, cmd = false, {}, string.format("pgrep -l %s", s)
+	local h = io.popen(cmd, "r")
 	for l in h:lines() do
 		if l and l ~= "" then
 			table.insert(r, l)
