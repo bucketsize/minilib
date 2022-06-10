@@ -86,29 +86,34 @@ function F.read()
     local h, p = nil, 1
     local paths = {}
     return function(path)
-        if not (path == nil) then
-            if not Util:haz(skip_paths, path) then
-                table.insert(paths, path)
-                -- print("read next", path)
-            end
+        if not (path == nil or Util:haz(skip_paths, path)) then
+			table.insert(paths, path)
         end
-        if h == nil then
-			if p == 1 then return nil end
-            h = assert(io.open(paths[p], "r"))
+        if h == nil and #paths > 0 then
+			h = assert(io.open(paths[p], "r"))
         end
-        local l = h:read("*line")
-        if l == nil then
-            h:close()
-            if p < #paths then
-                p = p + 1
-                h = assert(io.open(paths[p]))
-                l = h:read("*line")
-            else
-                print("read ", #paths)
-                return nil
-            end
-        end
-        return {path=paths[p], line=l}
+		local l = nil
+		if h then
+			l = h:read("*line")
+			if l == nil then
+				h:close()
+				if p < #paths then
+					p = p + 1
+					h = assert(io.open(paths[p]))
+					l = h:read("*line")
+				else
+					print("read ", #paths)
+					return nil
+				end
+			end
+		else
+			return nil
+		end
+		if l then 
+        	return {path=paths[p], line=l}
+		else
+			return nil
+		end
     end
 end
 
