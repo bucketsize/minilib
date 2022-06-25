@@ -88,5 +88,9 @@ function test_10_groups()
 	assert(#gs > 0)
 end
 
+function test_11_mkdir()
+	Sh.mkdir("/tmp/"..tostring(os.time()).."/now")
+end
+
 os.exit( luaunit.LuaUnit.run() )
 

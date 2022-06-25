@@ -79,11 +79,4 @@ function test_3_pipe_3()
 	assert(#iv > 0)
 end
 
-function test_4_find()
-    Pr.pipe()
-        .add(Sh.find("/etc/", "*.xml"))
-		.add(Sh.echo())
-        .run()
-end
-
 os.exit( luaunit.LuaUnit.run() )

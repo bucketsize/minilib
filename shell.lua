@@ -1,5 +1,7 @@
 local Util = require('minilib.util')
 local Proc = require('minilib.process')
+local lfs_ = require("lfs")
+local sha1 = require("sha1")
 
 _HOME = os.getenv("HOME")
 _USER = os.getenv("USER")
@@ -54,7 +56,80 @@ function F.exec(path)
 	end
 end
 
+function F.traverse(dque, dqueptr, cb, opts)
+	if not opts then
+		opts = {}
+	end
+	local dcur = dque[dqueptr] 
+	-- print("traverse", dcur, dqueptr, #dque, cb)
+	function readdiro(diro)
+		local e = diro:next()
+		if e == nil then
+			diro:close()
+			diro = nil
+			return F.traverse(dque, dqueptr+1, cb, opts)
+		else
+			if e == "." or e == ".." then
+				-- print("readdiro, reject", dcur, e)
+				return readdiro(diro)
+			end
+			local l = dcur .. "/" .. e
+			local attrs, err = lfs_.attributes(l)
+			if err then
+				-- print("readdiro, error", l, err)
+				return readdiro(diro)
+			end
+			if attrs.mode == "file" then
+				-- print("readdiro, next", l)
+				if opts.pattern then
+					if l:find(opts.pattern) then
+						cb(l)
+					end
+				else
+					cb(l)
+				end
+				return readdiro(diro)
+			else
+				-- print("readdiro, dque", l, attrs.mode)
+				table.insert(dque, l)
+				return readdiro(diro)
+			end
+		end
+	end
+	if not (dcur) then
+		return nil
+	end
+	local ok, res = pcall(function()
+		local i, d = lfs_.dir(dcur)
+		return {iter = i, diro = d}
+	end)
+	-- print("traverse, state", ok, res)
+	if not ok then
+		return F.traverse(dque, dqueptr+1, cb, opts)
+	end
+	return readdiro(res.diro)
+end
+
 function F.find(path, pattern)
+	local co = nil
+	return function()
+		if not co then
+			co = coroutine.create(function()
+				F.traverse({path}, 1, function(f)
+					-- print("find, yield", f)
+					coroutine.yield(f)
+				end, {pattern=pattern})
+			end)
+		end
+		local ok, res = coroutine.resume(co)
+		if ok then
+			return res
+		else
+			return nil
+		end
+	end
+end
+function F.__find(path, pattern)
 	local cmd = ""
 	if pattern == nil then
 		cmd = string.format(
@@ -65,7 +140,7 @@ function F.find(path, pattern)
 			"find %s -type f -name \"%s\" -exec grep -Iq . {} \\; -print",
 			path, pattern)
 	end
-	print(".find", cmd)
+	print("__find", cmd)
     local h = assert(io.popen(cmd))
     return function()
         if h == nil then
@@ -129,11 +204,21 @@ function F.sed(slist)
     end
 end
 
+function F.sha1sum(file)
+	local h = io.open(file, "rb");
+	local s = nil
+	if h then 
+		s = sha1.sha1(h:read("*all"))
+		h:close()
+	end
+	return s
+end
+
 function F.open(path, mode)
     local h = io.open(path, mode)
     if h == nil then
         local b, d = F.split_path(path)
-        F.mkdir(d)
+        lfs_.mkdir(d)
         h = io.open(path, mode)
     end
     return h
@@ -234,7 +319,7 @@ local EXEC_FORMAT={
 }
 function F.__exec_cb(cmd, fn)
 	if _DEBUG then
-		print("exec>", cmd)
+		print("__exec_cb", cmd)
 	end
 	local h = io.popen(cmd, "r")
 	for l in h:lines() do
@@ -384,7 +469,7 @@ function F.arch()
                 return list
             end
 			for i, v in pairs(list) do
-				-- print("cpuarch>", i, v[1])
+				-- print("arch", i, v[1])
 				if v ~= nil then parch=_ARCH_FLAG[v[1]] end
 			end
 			return list
@@ -405,7 +490,6 @@ end
 function F.__file_exists(file, repo)
     for i,v in ipairs(repo) do
         local p = v..file
-        -- print("trying>", p)
         if F.path_exists(p) then
             return p
         end
@@ -429,7 +513,7 @@ end
 
 function F.assert_file_exists(file)
     if not F.file_exists(file) then
-        print(file .. " -> required") 
+        print("assert_file_exists", file .. " -> required") 
         os.exit(1)
     end
 end
