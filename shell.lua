@@ -497,8 +497,21 @@ function F.__file_exists(file, repo)
     return nil
 end
 
-function F.file_exists(file)
-    return F.__file_exists(file, _PATH)
+function F.file_exists(f)
+	if type(f) == 'table' then
+		for i, j in ipairs(f) do
+    		if not F.__file_exists(j, _PATH) then
+				return false
+			end
+		end
+		return true
+	else
+		if type(f) == 'string' then
+    		return F.__file_exists(f, _PATH)
+		else
+			return false
+		end
+	end
 end
 
 function F.libs()
@@ -513,7 +526,7 @@ end
 
 function F.assert_file_exists(file)
     if not F.file_exists(file) then
-        print("assert_file_exists", file .. " -> required") 
+        print("assert_file_exists> requires", file) 
         os.exit(1)
     end
 end
