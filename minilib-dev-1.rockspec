@@ -9,9 +9,9 @@ description = {
 }
 dependencies = {
    "lua >= 5.3",
-   "sha1 0.6.0-1",
+   "sha1",
+   "luafilesystem",
    "luasocket >= 3.0rc1-2",
-   "luafilesystem >= 1.8.0-1",
 }
 build = {
 	type = "none",
