@@ -40,7 +40,7 @@ function test_list_fmap()
 	local m = M.List.of({1,2,3,4})
 		:fmap(f)
 		:fmap(g)
-	assert(m.Type == "List")
+	assert(m.Type == M.MTyp.List)
 	assert(m[3] == 10)
 end
 
@@ -48,8 +48,17 @@ function test_dict_fmap()
 	local m = M.List.of({a=1,b=2,c=3,d=4})
 		:fmap(f)
 		:fmap(g)
-	assert(m.Type == "List")
+	assert(m.Type == M.MTyp.List)
 	assert(m.c == 10)
+end
+
+function test_either_fmap()
+	local m = M.Left.of(3)
+		:fmap(f)
+		:fmap(g)
+	assert(m.Type == M.MTyp.Left)
+	print(">> left value", m.value) 
+	assert(m.value == f(g(3)))
 end
 
 -- monadic laws
@@ -57,6 +66,7 @@ end
 -- M a >>= of => M a
 -- M a >>= f >>= g => M a >>= f(g)
 
+-- Maybe
 local mf = function(x) return M.Just.of(x*x) end
 local mg = function(x) return M.Just.of(x+1) end
 
@@ -78,6 +88,37 @@ function test_just_monad_law_3()
 		local y = mf(x)
 		return  mg(y.value)
 	end)
+	assert(m:eq(r))
+end
+
+-- List
+local lf = function(x) return M.List.of({x*x}) end
+local lg = function(x) return M.List.of({x+1}) end
+
+function test_List_monad_law_1()
+	local m = M.List.of({1,2,3,4}):bind(lf)
+	m:show()
+	local r = M.List.of({1,4,9,16})
+	r:show()
+	assert(m:eq(r))
+end
+
+function test_List_monad_law_2()
+	local m = M.List.of({1,2,3,4}):bind(M.List.of)
+	m:show()
+	local r = M.List.of({1,2,3,4})
+	r:show()
+	assert(m:eq(r))
+end
+
+function test_List_monad_law_3()
+	local m = M.List.of({1,2,3,4}):bind(lf):bind(lg)
+	m:show()
+	local r = M.List.of({1,2,3,4}):bind(function(x)
+		local y = lf(x)
+		return  lg(y[1])
+	end)
+	r:show()
 	assert(m:eq(r))
 end
 

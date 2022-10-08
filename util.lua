@@ -305,19 +305,8 @@ function Util:printOTable(t)
 		end
 	end
 end
-function Util:run_co(k, co)
-	local status = coroutine.status(co)
-	print(">> run_co", k, status, co)
-	if (status == 'dead') then
-		return print('co/ ' .. k, status)
-	end
-	local ok,res = coroutine.resume(co)
-	if not ok then
-		print('co/ ' .. k, res)
-	end
-end
 
-function Util:new_timer()
+function Util.new_timer()
     return {
         epoc_interval = 1,
         t = 0,
@@ -326,7 +315,7 @@ function Util:new_timer()
             table.insert(self.fns, {fn = fn, i = interval})
         end,
         start = function(self, tepocs)
-            print("new_timer, start:", self)
+            print(">> new_timer, start:", self)
             while true do
                 self.t = self.t + 1
                 for i, fd in ipairs(self.fns) do
@@ -334,7 +323,7 @@ function Util:new_timer()
                         fd.fn()
                     end
                 end
-                if not (self.t < tepocs) then
+                if tepocs and (not (self.t < tepocs)) then
                     break
                 end
                 Util.sleep(self.epoc_interval)

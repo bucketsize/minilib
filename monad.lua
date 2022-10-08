@@ -1,4 +1,11 @@
-local MObj = {value=nil, Type=nil}
+local MTyp = {
+	Obj=1,
+	Maybe=2, Just=3, Nothing=4,
+	List=5,
+	Either=6, Left=7, Right=8
+}
+
+local MObj = {value=nil, Type=MTyp.Obj}
 function MObj:eq(mobj)
 	return self.value == mobj.value
 end
@@ -8,16 +15,28 @@ function MObj.of(value, typeT)
 	return o
 end
 
+-- functor
+-- of   :: a -> M a
+-- fmap :: (a -> b) -> M a -> M b
+
+-- monad
+-- of 	:: a -> M a
+-- bind :: (a -> M b) -> M a -> M b
 local Maybe   = {}
 setmetatable(Maybe, {__index = MObj})
 
-local Just    = {Type = "Just"}
+local Just    = {Type = MTyp.Just}
+function Just:show()
+	print("Just "..self.value)
+end
 setmetatable(Just, {__index = Maybe})
 
-local Nothing = {Type = "Nothing"}
+local Nothing = {Type = MTyp.Nothing}
+function Just:show()
+	print("Nothing")
+end
 setmetatable(Nothing, {__index = Maybe})
 
--- of :: a -> Maybe a
 function Just.of(s)
 	if s == nil then
 		return Nothing
@@ -27,31 +46,59 @@ function Just.of(s)
 	return o
 end
 
--- fmap :: (a -> b) -> Maybe a -> Maybe b
-function Maybe:fmap(f)
-	if self.Type == "Just" then
-		return Just.of(f(self.value))
-	else
-		return Nothing
-	end
+function Just:fmap(f)
+	return Just.of(f(self.value))
 end
 
--- bind:: (a -> Maybe b) -> Maybe a -> Maybe b
-function Maybe:bind(f)
+function Just:bind(f)
 	return f(self.value)
 end
 
-local List = {Type="List"}
+function Nothing.of(s)
+	return Nothing
+end
+
+function Nothing:fmap(f)
+	return Nothing
+end
+
+function Nothing:bind(f)
+	return Nothing 
+end
+
+local List = {Type=MTyp.List}
 setmetatable(List, {__index = MObj})
 
--- of :: a -> List a
+function List:show()
+	print("List :: ")
+	for k,v in ipairs(self) do
+		print("-", k, ": ", v)
+	end
+end
+
 function List.of(t)
-	local o = t or {}
+	local o
+	if type(t) == "table" then
+		o = t or {}
+	else
+		o = {t}
+	end
 	setmetatable(o, {__index = List})
 	return o
 end
 
--- fmap :: (a -> b) -> List a -> List b
+function List:eq(l)
+	if not (#self == #l) then
+		return false
+	end
+	for k,v in ipairs(self) do
+		if not (v == l[k]) then
+			return false
+		end
+	end
+	return true
+end
+
 function List:fmap(f)
 	local o = {}
 	for k,v in pairs(self) do
@@ -60,7 +107,6 @@ function List:fmap(f)
 	return List.of(o)
 end
 
--- bind:: (a -> List b) -> List a -> List b
 function List:bind(f)
 	local o = {}
 	for k,v in pairs(self) do
@@ -69,8 +115,41 @@ function List:bind(f)
 	return List.of(o)
 end
 
+local Either = {Type=MTyp.Either}
+setmetatable(Either, {__index = MObj})
+
+local Left = {Type=MTyp.Left} 
+setmetatable(Left, {__index = Either})
+
+function Left.of(x)
+	local o = {value=x}
+	setmetatable(o, {__index = Left})
+	return o
+end
+
+function Left:fmap(f)
+	return Left.of(self.value)
+end
+
+local Right = {Type=MTyp.Left} 
+setmetatable(Right, {__index = Either})
+
+function Right.of(x)
+	local o = {value=x}
+	setmetatable(o, {__index = Right})
+	return o
+end
+
+function Right:fmap(f)
+	return Right.of(self.value)
+end
+
 return 
-	{ Maybe=Maybe
+	{ MTyp=MTyp
+	, Maybe=Maybe
 	, Just=Just
 	, Nothing=Nothing
-	, List=List}
+	, List=List
+	, Either=Either
+	, Left=Left
+	, Right=Right}
