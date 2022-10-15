@@ -1,4 +1,8 @@
+package.path = '?.lua;' .. package.path
+require "luarocks.loader"
+
 local socket = require("socket")
+local json = require("json")
 
 local Util={}
 function Util:tofile(file, t)
@@ -296,6 +300,7 @@ function Util:printITable(t)
 	end
 end
 function Util:printOTable(t)
+	print("decprecated printOTable") 
 	for i,v in pairs(t) do
 		if type(v) == 'table' then
 			print(i ..':')
@@ -305,6 +310,10 @@ function Util:printOTable(t)
 		end
 	end
 end
+function Util.tojson(t)
+	return json.encode(t)
+end
+
 
 function Util.new_timer()
     return {

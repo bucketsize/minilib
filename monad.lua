@@ -1,8 +1,11 @@
+local U = require("util")
+
 local MTyp = {
 	Obj=1,
 	Maybe=2, Just=3, Nothing=4,
 	List=5,
-	Either=6, Left=7, Right=8
+	Either=6, Left=7, Right=8,
+	IO=9
 }
 
 local MObj = {value=nil, Type=MTyp.Obj}
@@ -13,6 +16,9 @@ function MObj.of(value, typeT)
 	local o = {value=normal}
 	setmetatable(o, {__index = typeT})
 	return o
+end
+function MObj:show()
+	return string.format("Typ.%s %s", self.Type, U.tojson(self))
 end
 
 -- functor
@@ -26,14 +32,11 @@ local Maybe   = {}
 setmetatable(Maybe, {__index = MObj})
 
 local Just    = {Type = MTyp.Just}
-function Just:show()
-	print("Just "..self.value)
-end
 setmetatable(Just, {__index = Maybe})
 
 local Nothing = {Type = MTyp.Nothing}
-function Just:show()
-	print("Nothing")
+function Nothing:show()
+	return "Nothing"
 end
 setmetatable(Nothing, {__index = Maybe})
 
@@ -68,13 +71,6 @@ end
 
 local List = {Type=MTyp.List}
 setmetatable(List, {__index = MObj})
-
-function List:show()
-	print("List :: ")
-	for k,v in ipairs(self) do
-		print("-", k, ": ", v)
-	end
-end
 
 function List.of(t)
 	local o
@@ -128,7 +124,11 @@ function Left.of(x)
 end
 
 function Left:fmap(f)
-	return Left.of(self.value)
+	return Left.of(f(self.value))
+end
+
+function Left:bind(f)
+	return f(self.value)
 end
 
 local Right = {Type=MTyp.Left} 
@@ -141,8 +141,55 @@ function Right.of(x)
 end
 
 function Right:fmap(f)
-	return Right.of(self.value)
+	return Right.of(f(self.value))
 end
+
+function Right:bind(f)
+	return f(self.value)
+end
+
+local IO = {Type=MTyp.IO}
+setmetatable(IO, {__index = MObj})
+function IO.of(x)
+	local o = {value=x}
+	setmetatable(o, {__index = IO})
+	return o
+end
+function IO:fmap(f)
+	return IO.of(f(self.value))
+end
+function IO:bind(f)
+	return f(self.value)
+end
+function IO.readFileLines(f)
+	local h = assert(io.open(f, "r"))
+	local ls = {}
+	while true do
+		local l = h:read("*line")
+		if l == nil then
+			break
+		else
+			table.insert(ls, l)
+		end
+	end
+	h:close()
+	return IO.of(List.of(ls))
+end
+function IO.readPOutLines(f)
+	local h = assert(io.popen(f))
+	local ls = {}
+	while true do
+		local l = h:read("*line")
+		if l == nil then
+			break
+		else
+			table.insert(ls, l)
+		end
+	end
+	h:close()
+	return IO.of(List.of(ls))
+end
+
 
 return 
 	{ MTyp=MTyp
@@ -152,4 +199,5 @@ return
 	, List=List
 	, Either=Either
 	, Left=Left
-	, Right=Right}
+	, Right=Right
+	, IO=IO}

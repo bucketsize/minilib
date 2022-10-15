@@ -3,6 +3,7 @@ package.path = '?.lua;' .. package.path
 require "luarocks.loader"
 luaunit = require('luaunit')
 
+local U = require("util")
 local M = require("monad")
 
 local f = function(x) return x*x end
@@ -58,7 +59,7 @@ function test_either_fmap()
 		:fmap(g)
 	assert(m.Type == M.MTyp.Left)
 	print(">> left value", m.value) 
-	assert(m.value == f(g(3)))
+	assert(m.value == g(f(3)))
 end
 
 -- monadic laws
@@ -97,29 +98,52 @@ local lg = function(x) return M.List.of({x+1}) end
 
 function test_List_monad_law_1()
 	local m = M.List.of({1,2,3,4}):bind(lf)
-	m:show()
+	print(m:show())
 	local r = M.List.of({1,4,9,16})
-	r:show()
+	print(r:show())
 	assert(m:eq(r))
 end
 
 function test_List_monad_law_2()
 	local m = M.List.of({1,2,3,4}):bind(M.List.of)
-	m:show()
+	print(m:show())
 	local r = M.List.of({1,2,3,4})
-	r:show()
+	print(r:show())
 	assert(m:eq(r))
 end
 
 function test_List_monad_law_3()
 	local m = M.List.of({1,2,3,4}):bind(lf):bind(lg)
-	m:show()
+	print(m:show())
 	local r = M.List.of({1,2,3,4}):bind(function(x)
 		local y = lf(x)
 		return  lg(y[1])
 	end)
-	r:show()
+	print(r:show())
 	assert(m:eq(r))
+end
+
+function test_IO_file()
+	local m = M.IO
+		.readFileLines("/etc/hosts")
+		:fmap(function(x)
+			return x:fmap(function(a)
+				return "-> "..a
+			end)
+		end)
+	print("finally:", U.tojson(m))
+	assert(m.Type == M.MTyp.IO)
+end
+function test_IO_pout()
+	local m = M.IO
+		.readPOutLines("ps")
+		:fmap(function(x)
+			return x:fmap(function(a)
+				return "-> "..a
+			end)
+		end)
+	print("finally:", U.tojson(m))
+	assert(m.Type == M.MTyp.IO)
 end
 
 os.exit( luaunit.LuaUnit.run() )

@@ -1,7 +1,11 @@
-local Util = require('minilib.util')
-local Proc = require('minilib.process')
+package.path = '?.lua;' .. package.path
+require "luarocks.loader"
+
 local lfs_ = require("lfs")
 local sha1 = require("sha1")
+
+local Util = require('util')
+local Proc = require('process')
 
 _HOME = os.getenv("HOME")
 _USER = os.getenv("USER")
