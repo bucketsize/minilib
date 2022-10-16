@@ -125,7 +125,7 @@ end
 
 function test_IO_file()
 	local m = M.IO
-		.readFileLines("/etc/hosts")
+		.read_lines_file("/etc/hosts")
 		:fmap(function(x)
 			return x:fmap(function(a)
 				return "-> "..a
@@ -136,7 +136,7 @@ function test_IO_file()
 end
 function test_IO_pout()
 	local m = M.IO
-		.readPOutLines("ps")
+		.read_lines_pout("ps")
 		:fmap(function(x)
 			return x:fmap(function(a)
 				return "-> "..a

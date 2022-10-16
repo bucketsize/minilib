@@ -2,7 +2,7 @@ package.path = '?.lua;' .. package.path
 require "luarocks.loader"
 
 local socket = require("socket")
-local json = require("json")
+local json = require("minilib.json")
 
 local Util={}
 function Util:tofile(file, t)

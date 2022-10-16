@@ -4,8 +4,8 @@ require "luarocks.loader"
 local lfs_ = require("lfs")
 local sha1 = require("sha1")
 
-local Util = require('util')
-local Proc = require('process')
+local Util = require('minilib.util')
+local Proc = require('minilib.process')
 
 _HOME = os.getenv("HOME")
 _USER = os.getenv("USER")
@@ -334,6 +334,7 @@ end
 function F.__exec(cmd)
 	F.__exec_cb(cmd, print)
 end
+F.exec_cmd = F.__exec
 function F.pgrep(s)
 	local p, r, cmd = false, {}, string.format("pgrep -l %s", s)
 	local h = io.popen(cmd, "r")

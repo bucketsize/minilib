@@ -1,4 +1,4 @@
-local U = require("util")
+local U = require("minilib.util")
 
 local MTyp = {
 	Obj=1,
@@ -102,6 +102,13 @@ function List:fmap(f)
 	end
 	return List.of(o)
 end
+function List:keys()
+	local o = {}
+	for k,v in pairs(self) do
+		table.insert(o, k)
+	end
+	return List.of(o)
+end
 
 function List:bind(f)
 	local o = {}
@@ -161,7 +168,7 @@ end
 function IO:bind(f)
 	return f(self.value)
 end
-function IO.readFileLines(f)
+function IO.read_lines_file(f)
 	local h = assert(io.open(f, "r"))
 	local ls = {}
 	while true do
@@ -175,7 +182,7 @@ function IO.readFileLines(f)
 	h:close()
 	return IO.of(List.of(ls))
 end
-function IO.readPOutLines(f)
+function IO.read_lines_pout(f)
 	local h = assert(io.popen(f))
 	local ls = {}
 	while true do
