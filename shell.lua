@@ -384,6 +384,7 @@ function F.launch(app)
 		:gsub("%%f", "")
 		:gsub("%%U", "")
 		:gsub("%%u", ""))
+	print(">launch>", cmd)
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")
    Util.sleep(0.5) -- for some reason needed so exit can nohup process to 1
