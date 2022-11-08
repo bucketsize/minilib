@@ -24,10 +24,10 @@ local CmdServer = {
 			end
 		end
 	end,
-	run_nonblocking = function(self)
+	run_nonblocking = function(self, opt)
 		while true do
 			print("run_nonblocking")
-			local sl_r, sl_w, err = self.socket.select({self.server}, nil, 1)
+			local sl_r, sl_w, err = self.socket.select({self.server}, nil, opt.timeout)
 			for i, s in pairs(sl_r) do
 				if type(i) == 'number' then -- sockets are indexed by number and string:keys
 					local client, err = s:accept()
