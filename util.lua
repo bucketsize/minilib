@@ -1,7 +1,6 @@
 package.path = '?.lua;' .. package.path
 require "luarocks.loader"
 
-local socket = require("socket")
 local json = require("minilib.json")
 
 local Util={}
@@ -315,37 +314,5 @@ function Util.tojson(t)
 end
 
 
-function Util.new_timer()
-    return {
-		t_sleep = 10, -- millis
-        t_lapsd = 0,
-        fns = {},
-        tick = function(self, interval, fn)
-            table.insert(self.fns, {fn = fn, i = interval*1000})
-        end,
-        start = function(self, t_run)
-			if t_run then
-				t_run = t_run * 1000
-			end
-            print("new_timer.start:", self)
-            while true do
-				-- print("new_timer.start, i", self.t_lapsd)
-                self.t_lapsd = self.t_lapsd + self.t_sleep
-                for k, fd in ipairs(self.fns) do
-                    if (self.t_lapsd % fd.i) == 0 then
-                        -- print("new_timer.start", k, fd.i , "@", self.t_lapsd)
-						fd.fn()
-                    end
-                end
-                if t_run and (not (self.t_lapsd < t_run)) then
-                    break
-                end
-                Util.sleep(self.t_sleep/1000)
-            end
-        end
-    }
-end
-
-Util.sleep = socket.sleep
 
 return Util
