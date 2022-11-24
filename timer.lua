@@ -5,6 +5,7 @@ local Ut = require("minilib.util")
 local So = require("socket")
 
 local Timer = {
+	sleep = So.sleep,
 	new_timer = function()
 		return {
 			t_sleep = 10, -- millis

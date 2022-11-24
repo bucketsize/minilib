@@ -322,9 +322,7 @@ local EXEC_FORMAT={
 	launch = "nohup setsid %s > /dev/null &"
 }
 function F.__exec_cb(cmd, fn)
-	if _DEBUG then
-		print("__exec_cb", cmd)
-	end
+	print("__exec_cb", cmd)
 	local h = io.popen(cmd, "r")
 	for l in h:lines() do
 		fn(l)
