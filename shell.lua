@@ -6,6 +6,7 @@ local sha1 = require("sha1")
 
 local Util = require('minilib.util')
 local Proc = require('minilib.process')
+local Tr = require('minilib.timer')
 local logger = require("minilib.logger").create()
 
 _HOME = os.getenv("HOME")
@@ -389,7 +390,7 @@ function F.launch(app)
 	logger.info("launch %s", cmd)
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")
-   Util.sleep(0.5) -- for some reason needed so exit can nohup process to 1
+   Tr.sleep(0.5) -- for some reason needed so exit can nohup process to 1
    h:close()
 end
 
