@@ -25,6 +25,7 @@ build = {
 			["minilib.json"]             = "json.lua",
 			["minilib.monad"]            = "monad.lua",
 			["minilib.timer"]            = "timer.lua",
+			["minilib.logger"]            = "logger.lua",
 			["minilib.cmd_server"]       = "cmd_server.lua",
 			["minilib.cmd_client"]       = "cmd_client.lua"
 		}

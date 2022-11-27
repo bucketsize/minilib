@@ -2,6 +2,7 @@
 
 local Util = require("minilib.util")
 local socket = require("socket")
+local logger = require("minilib.logger").create()
 
 local CmdServer = {
 	listen = function(self, host, port)
@@ -10,11 +11,11 @@ local CmdServer = {
 		tcp:listen(10)
 		self.socket = socket
 		self.server = server
-		print('listen',host, port)
+		logger.info('listen on %s:%s',host, port)
 	end,
 	handle_client = function(self, client)
 		local line, err = client:receive("*l")
-		print("handle_client", line, err)
+		logger.info("handle_client, %s, %s", line, err)
 		if not err then
 			local op, oo = line:match("(%w+)|(.*)")
 			if self.Handler[op] then
@@ -26,13 +27,13 @@ local CmdServer = {
 	end,
 	run_nonblocking = function(self, opt)
 		while true do
-			-- print("run_nonblocking")
+			-- logger.info("run_nonblocking")
 			local sl_r, sl_w, err = self.socket.select({self.server}, nil, opt.timeout)
 			for i, s in pairs(sl_r) do
 				if type(i) == 'number' then -- sockets are indexed by number and string:keys
 					local client, err = s:accept()
 					if err then
-						print("run_nonblocking, err on accept", err)
+						logger.info("run_nonblocking, err on accept: %s", err)
 					else
 						self:handle_client(client)
 						client:close()

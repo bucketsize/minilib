@@ -1,4 +1,5 @@
 local Util = require('minilib.util')
+local logger = require("minilib.logger").create()
 
 local F = {}
 
@@ -28,8 +29,7 @@ function F.pipe()
                     ended = false
                 end
                 if trace then
-                    print("fn_"..tostring(i)
-                        ,a0, "->", a, e[i])
+                    logger.info("fn_%s %s -> %s %s", i ,a0, a, e[i])
                 end
 			end
 			if not (a==nil) then
@@ -69,7 +69,7 @@ function F.branch()
 end
 
 function F.bget(l)
-	print(l)
+	logger.info("bget: %s",l)
 	local r = {}
 	local i = 1
 	return function(x)

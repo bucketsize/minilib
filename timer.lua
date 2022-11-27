@@ -3,6 +3,7 @@ require "luarocks.loader"
 
 local Ut = require("minilib.util")
 local So = require("socket")
+local logger = require("minilib.logger").create()
 
 local Timer = {
 	sleep = So.sleep,
@@ -18,13 +19,13 @@ local Timer = {
 				if t_run then
 					t_run = t_run * 1000
 				end
-				print("new_timer.start:", self)
+				logger.info("new_timer.start")
 				while true do
-					-- print("new_timer.start, i", self.t_lapsd)
+					-- logger.info("new_timer.start, i", self.t_lapsd)
 					self.t_lapsd = self.t_lapsd + self.t_sleep
 					for k, fd in ipairs(self.fns) do
 						if (self.t_lapsd % fd.i) == 0 then
-							-- print("new_timer.start", k, fd.i , "@", self.t_lapsd)
+							-- logger.info("new_timer.start", k, fd.i , "@", self.t_lapsd)
 							fd.fn()
 						end
 					end

@@ -2,6 +2,7 @@ package.path = '?.lua;' .. package.path
 require "luarocks.loader"
 
 local json = require("minilib.json")
+local logger = require("minilib.logger").create()
 
 local Util={}
 function Util:tofile(file, t)
@@ -60,7 +61,7 @@ function Util:eq(o1, o2)
 end
 function __find_all(sep, a, i, path)
     local s, f = path:find(sep, i)
-    -- print(path, i, s, f)
+    -- logger.info(path, i, s, f)
     if f then
         table.insert(a, {s, f})
         return __find_all(sep, a, f+1, path)
@@ -70,7 +71,7 @@ function __find_all(sep, a, i, path)
 end
 function __split(sep, a, i, path, opt)
     local s, f = path:find(sep, i, opt.plain)
-    -- print(path, i, s, f)
+    -- logger.info(path, i, s, f)
     if f then
         table.insert(a, path:sub(i, s-1))
         return __split(sep, a, f+1, path, opt)
@@ -96,7 +97,7 @@ function Util:split(sep, path, opt)
             opt.plain = not opt.regex
         end
     end
-    -- print("split opts:", opt.regex, opt.plain)
+    -- logger.info("split opts:", opt.regex, opt.plain)
     return __split(sep, {}, 1, path, opt)
 end
 function Util:segpath(path)
@@ -220,7 +221,7 @@ function Util:grep(file, pattern)
 end
 
 function Util:exec(cmd)
-    print("exec>", cmd)
+    logger.info("exec %s", cmd)
 	local h = io.popen(cmd, "r")
 	local r
 	if h == nil then
@@ -271,11 +272,11 @@ end
 function Util:strip(str)
 	for i = 1, #str do
 		local c = str:sub(i, i)
-		--print(i,c)
+		--logger.info(i,c)
 		if not Util:iswhitespace(c) then
 			for j = #str, 1, -1 do
 				local r = str:sub(j, j)
-				--print(j,r)
+				--logger.info(j,r)
 				if not Util:iswhitespace(r) then
 					return str:sub(i, j)
 				end
@@ -293,26 +294,8 @@ function Util:wminfo()
    return {wm=wm}
 end
 
-function Util:printITable(t)
-	for i,v in ipairs(t) do
-		print(i .. ': ', v)
-	end
-end
-function Util:printOTable(t)
-	print("decprecated printOTable") 
-	for i,v in pairs(t) do
-		if type(v) == 'table' then
-			print(i ..':')
-			Util:printOTable(v)
-		else
-			print(i .. ': ', v)
-		end
-	end
-end
 function Util.tojson(t)
 	return json.encode(t)
 end
-
-
 
 return Util

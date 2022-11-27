@@ -5,6 +5,7 @@ require "luacov"
 luaunit = require('luaunit')
 local Sh = require("shell")
 local Ut = require("util")
+local Tr = require("timer")
 
 function test_01_split_path()
     local x
@@ -55,7 +56,6 @@ function test_07_ln()
 end
 function test_08_pgrep()
 	local t, s = Sh.pgrep("lua")
-	Ut:printITable(s)
 	assert(Sh.pgrep("lua"))
 	assert(not Sh.pgrep("phantomkahn"))
 
@@ -65,7 +65,7 @@ function test_08_pgrep()
 		assert(false)
 	end
 	
-	Ut.sleep(5)
+	Tr.sleep(5)
 	if (Sh.pgrep("conky")) then
 		Sh.killall("conky")
 	end
@@ -84,7 +84,6 @@ end
 
 function test_10_groups()
 	local gs = Sh.groups()
-	Ut:printITable(gs)
 	assert(#gs > 0)
 end
 

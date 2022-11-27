@@ -6,6 +6,7 @@ local sha1 = require("sha1")
 
 local Util = require('minilib.util')
 local Proc = require('minilib.process')
+local logger = require("minilib.logger").create()
 
 _HOME = os.getenv("HOME")
 _USER = os.getenv("USER")
@@ -65,7 +66,7 @@ function F.traverse(dque, dqueptr, cb, opts)
 		opts = {}
 	end
 	local dcur = dque[dqueptr] 
-	-- print("traverse", dcur, dqueptr, #dque, cb)
+	-- logger.info("traverse", dcur, dqueptr, #dque, cb)
 	function readdiro(diro)
 		local e = diro:next()
 		if e == nil then
@@ -74,17 +75,17 @@ function F.traverse(dque, dqueptr, cb, opts)
 			return F.traverse(dque, dqueptr+1, cb, opts)
 		else
 			if e == "." or e == ".." then
-				-- print("readdiro, reject", dcur, e)
+				-- logger.info("readdiro, reject", dcur, e)
 				return readdiro(diro)
 			end
 			local l = dcur .. "/" .. e
 			local attrs, err = lfs_.attributes(l)
 			if err then
-				-- print("readdiro, error", l, err)
+				-- logger.info("readdiro, error", l, err)
 				return readdiro(diro)
 			end
 			if attrs.mode == "file" then
-				-- print("readdiro, next", l)
+				-- logger.info("readdiro, next", l)
 				if opts.pattern then
 					if l:find(opts.pattern) then
 						cb(l)
@@ -94,7 +95,7 @@ function F.traverse(dque, dqueptr, cb, opts)
 				end
 				return readdiro(diro)
 			else
-				-- print("readdiro, dque", l, attrs.mode)
+				-- logger.info("readdiro, dque", l, attrs.mode)
 				table.insert(dque, l)
 				return readdiro(diro)
 			end
@@ -107,7 +108,7 @@ function F.traverse(dque, dqueptr, cb, opts)
 		local i, d = lfs_.dir(dcur)
 		return {iter = i, diro = d}
 	end)
-	-- print("traverse, state", ok, res)
+	-- logger.info("traverse, state", ok, res)
 	if not ok then
 		return F.traverse(dque, dqueptr+1, cb, opts)
 	end
@@ -120,7 +121,7 @@ function F.find(path, pattern)
 		if not co then
 			co = coroutine.create(function()
 				F.traverse({path}, 1, function(f)
-					-- print("find, yield", f)
+					-- logger.info("find, yield", f)
 					coroutine.yield(f)
 				end, {pattern=pattern})
 			end)
@@ -144,7 +145,7 @@ function F.__find(path, pattern)
 			"find %s -type f -name \"%s\" -exec grep -Iq . {} \\; -print",
 			path, pattern)
 	end
-	print("__find", cmd)
+	logger.info("__find %s", cmd)
     local h = assert(io.popen(cmd))
     return function()
         if h == nil then
@@ -181,7 +182,7 @@ function F.read()
 					h = assert(io.open(paths[p]))
 					l = h:read("*line")
 				else
-					print("read ", #paths)
+					logger.info("read %s", #paths)
 					return nil
 				end
 			end
@@ -233,29 +234,29 @@ function F.write(head_path)
     local c = 0
     return function(fline)
         if fline == nil then
-            print("write", c)
+            logger.info("write %s", c)
             return fline
         end
         local wpath = head_path .. "/".. fline.path
         if (h == nil) then
-            -- print("write next", wpath)
+            -- logger.info("write next", wpath)
             h = F.open(wpath, "w")
             p = fline.path
             c = c+1
         else
             if not (p == fline.path) then
-                -- print("write next", wpath)
+                -- logger.info("write next", wpath)
                 h:close()
                 h = F.open(wpath, "w")
                 p = fline.path
                 c = c+1
             end
-            -- print("write cont >>", wpath)
+            -- logger.info("write cont >>", wpath)
         end
         if not (fline.line == nil) then
             h:write(fline.line)
             h:write('\n')
-            -- print(wpath .. " << " .. fline.line)
+            -- logger.info(wpath .. " << " .. fline.line)
         end
         return fline
     end
@@ -280,12 +281,12 @@ function F.echo()
 	return function(s)
 		i = i + 1
 		if type(s) == 'function' then
-			print(tostring(i), 'function')
+			logger.info('function %s', i)
 		else
 			if type(s) == 'table' then
-				print(tostring(i), listToString(s))
+				logger.info('function %s %s', tostring(i), listToString(s))
 			else
-				print(tostring(i), s)
+				logger.info('function %s %s', tostring(i), s)
 			end
 		end
 		return s
@@ -322,7 +323,7 @@ local EXEC_FORMAT={
 	launch = "nohup setsid %s > /dev/null &"
 }
 function F.__exec_cb(cmd, fn)
-	print("__exec_cb", cmd)
+	logger.info("__exec_cb %s", cmd)
 	local h = io.popen(cmd, "r")
 	for l in h:lines() do
 		fn(l)
@@ -330,7 +331,7 @@ function F.__exec_cb(cmd, fn)
 	h:close()
 end
 function F.__exec(cmd)
-	F.__exec_cb(cmd, print)
+	F.__exec_cb(cmd, function()end)
 end
 F.exec_cmd = F.__exec
 function F.pgrep(s)
@@ -364,6 +365,7 @@ function F.nohup(cmd)
 	os.execute(string.format(EXEC_FORMAT["nohup"], cmd))
 end
 function F.fork(cmd)
+	logger.info("fork %s", cmd)
 	os.execute(string.format(EXEC_FORMAT["fork"], cmd))
 end
 function F.forkonce(exe, args)
@@ -373,6 +375,8 @@ function F.forkonce(exe, args)
 		else
 			F.fork(exe)
 		end
+	else
+		logger.info("forkonce, already running: %s %s", exe, args)
 	end
 end
 function F.launch(app)
@@ -382,7 +386,7 @@ function F.launch(app)
 		:gsub("%%f", "")
 		:gsub("%%U", "")
 		:gsub("%%u", ""))
-	print(">launch>", cmd)
+	logger.info("launch %s", cmd)
    local h = assert(io.popen(cmd, "r"))
    local r = h:read("*a")
    Util.sleep(0.5) -- for some reason needed so exit can nohup process to 1
@@ -473,7 +477,7 @@ function F.arch()
                 return list
             end
 			for i, v in pairs(list) do
-				-- print("arch", i, v[1])
+				-- logger.info("arch", i, v[1])
 				if v ~= nil then parch=_ARCH_FLAG[v[1]] end
 			end
 			return list
@@ -530,7 +534,7 @@ end
 
 function F.assert_file_exists(file)
     if not F.file_exists(file) then
-        print("assert_file_exists> requires", file) 
+        logger.info("assert_file_exists, requires %s", file) 
         os.exit(1)
     end
 end
