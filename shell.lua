@@ -363,6 +363,7 @@ function F.sh(cmd)
 	F.__exec(string.format(EXEC_FORMAT["sh"], cmd))
 end
 function F.nohup(cmd)
+	logger.info("nohup %s", cmd)
 	os.execute(string.format(EXEC_FORMAT["nohup"], cmd))
 end
 function F.fork(cmd)
