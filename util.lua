@@ -286,7 +286,7 @@ function Util:strip(str)
 end
 function Util:wminfo()
    local h = assert(io.popen("wmctrl -m"))
-   local wm
+   local wm = "generic"
    for line in h:lines() do
 	  wm = line:match("Name:%s(%w+)")
 	  if wm then break end
