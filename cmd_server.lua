@@ -21,7 +21,9 @@ local CmdServer = {
 			if self.Handler[op] then
 				self.Handler[op](client, oo)
 			else
-				client:send("error\n")
+				client:send("error: no handler")
+				client:send(tostring(op))
+				client:send("\n")
 			end
 		end
 	end,
@@ -44,6 +46,7 @@ local CmdServer = {
 		end
 	end,
 	start = function(self, host, port, handler)
+		logger.info("cmd_server start on %s:%s", host, port)
 		self.Handler = handler
 		self:listen(host, port)
 	end
