@@ -429,9 +429,9 @@ end
 
 function F.wget(url, name)
 	if name then
-	    F.__exec(string.format("wget -O %s %s", name, url))
+	    F.__exec(string.format("wget -O %s \"%s\"", name, url))
 	else
-	    F.__exec(string.format("wget %s", url))
+	    F.__exec(string.format("wget \"%s\"", url))
 	end
 end
 function F.basename(path)
