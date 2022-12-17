@@ -8,7 +8,7 @@ description = {
    license = "EULA"
 }
 dependencies = {
-   "lua >= 5.3",
+   "lua >= 5.2",
    "sha1",
    "luafilesystem",
    "luasocket >= 3.0rc1-2",
