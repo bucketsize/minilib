@@ -336,6 +336,7 @@ function F.__exec(cmd)
 end
 F.exec_cmd = F.__exec
 function F.pgrep(s)
+	if s == nil or s == "" then return false end
 	local p, r, cmd = false, {}, string.format("pgrep -l %s", s)
 	local h = io.popen(cmd, "r")
 	for l in h:lines() do

@@ -12,6 +12,8 @@ dependencies = {
    "sha1",
    "luafilesystem",
    "luasocket >= 3.0rc1-2",
+   "luacov",
+   "luaunit"
 }
 build = {
 	type = "none",
