@@ -6,16 +6,17 @@ local logger = require("minilib.logger").create()
 
 local CmdServer = {
 	listen = function(self, host, port)
+		logger:info("listen, try on %s:%s", host, port)
 		local server = assert(socket.bind(host, port))
 		local tcp = assert(socket.tcp())
 		tcp:listen(10)
 		self.socket = socket
 		self.server = server
-		logger.info('listen on %s:%s',host, port)
+		logger:info("listen, ok on %s:%s", host, port)
 	end,
 	handle_client = function(self, client)
 		local line, err = client:receive("*l")
-		logger.info("handle_client, %s, %s", line, err)
+		logger:info("handle_client, %s, %s", line, err)
 		if not err then
 			local op, oo = line:match("(%w+)|(.*)")
 			if self.Handler[op] then
@@ -28,11 +29,11 @@ local CmdServer = {
 		end
 	end,
 	run_nonblocking = function(self, opt)
+		logger:info("run_nonblocking")
 		while true do
-			-- logger.info("run_nonblocking")
-			local sl_r, sl_w, err = self.socket.select({self.server}, nil, opt.timeout)
+			local sl_r, sl_w, err = self.socket.select({ self.server }, nil, opt.timeout)
 			for i, s in pairs(sl_r) do
-				if type(i) == 'number' then -- sockets are indexed by number and string:keys
+				if type(i) == "number" then -- sockets are indexed by number and string:keys
 					local client, err = s:accept()
 					if err then
 						logger.info("run_nonblocking, err on accept: %s", err)
@@ -46,10 +47,10 @@ local CmdServer = {
 		end
 	end,
 	start = function(self, host, port, handler)
-		logger.info("cmd_server start on %s:%s", host, port)
+		logger:info("CmdServer, start")
 		self.Handler = handler
 		self:listen(host, port)
-	end
+	end,
 }
 
 return CmdServer
