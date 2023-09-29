@@ -219,7 +219,7 @@ end
 function F.open(path, mode)
 	local h = io.open(path, mode)
 	if h == nil then
-		local b, d = F.split_path(path)
+		local _, d = F.split_path(path)
 		lfs_.mkdir(d)
 		h = io.open(path, mode)
 	end
@@ -278,13 +278,11 @@ function F.echo()
 	return function(s)
 		i = i + 1
 		if type(s) == "function" then
-			logger.info("function %s", i)
+			print("fun", i)
+		elseif type(s) == "table" then
+			print("tab", i, s)
 		else
-			if type(s) == "table" then
-				logger.info("function %s %s", tostring(i), listToString(s))
-			else
-				logger.info("function %s %s", tostring(i), s)
-			end
+			print("str", i, s)
 		end
 		return s
 	end
@@ -321,7 +319,7 @@ local EXEC_FORMAT = {
 }
 function F.__exec_cb(cmd, fn)
 	logger.debug("__exec_cb %s", cmd)
-	local h = io.popen(cmd, "r")
+	local h = assert(io.popen(cmd, "r"))
 	for l in h:lines() do
 		fn(l)
 	end
@@ -336,7 +334,7 @@ function F.pgrep(s)
 		return false
 	end
 	local p, r, cmd = false, {}, string.format("pgrep -l %s", s)
-	local h = io.popen(cmd, "r")
+	local h = assert(io.popen(cmd, "r"))
 	for l in h:lines() do
 		if l and l ~= "" then
 			table.insert(r, l)
@@ -386,6 +384,7 @@ function F.launch(app)
 	logger.info("launch %s", cmd)
 	local h = assert(io.popen(cmd, "r"))
 	local r = h:read("*a")
+	logger.info(r)
 	Tr.sleep(0.5) -- for some reason needed so exit can nohup process to 1
 	h:close()
 end
@@ -493,39 +492,75 @@ function F.arch()
 		.run()
 	return parch
 end
+function F.lsb_release()
+	local parch = { distro = "unknown" }
+	Proc
+		.pipe()
+		.add(F.exec("lsb_release -a"))
+		.add(F.echo())
+		-- Distributor ID: Debian
+		-- Description:    Debian GNU/Linux 12 (bookworm)
+		-- Release:        12
+		-- Codename:       bookworm
+		.add(
+			Proc.branch()
+				.add(F.grep("Distributor ID:%s+(.+)"))
+				.add(F.grep("Description:%s+(.+)"))
+				.add(F.grep("Release:%s+(.+)"))
+				.add(F.grep("Codename:%s+(.+)"))
+				.build()
+		)
+		.add(Proc.cull())
+		.add(function(list)
+			if list == nil then
+				return list
+			end
+			for i, v in pairs(list) do
+				print("lsb_release>", i, v[1])
+				if v ~= nil then
+					if i == 1 then
+						parch = { distro = v[1] }
+					end
+				end
+			end
+			return list
+		end)
+		.run()
+	return parch
+end
 
 function F.path_exists(file)
 	local h = io.open(file, "r")
 	if h == nil then
-		return false
+		return false, file
 	end
 	h:close()
-	return true
+	return true, file
 end
 
 function F.__file_exists(file, repo)
-	for i, v in ipairs(repo) do
+	for _, v in ipairs(repo) do
 		local p = v .. file
 		if F.path_exists(p) then
-			return p
+			return true, p
 		end
 	end
-	return nil
+	return false, file
 end
 
 function F.file_exists(f)
 	if type(f) == "table" then
-		for i, j in ipairs(f) do
+		for _, j in ipairs(f) do
 			if not F.__file_exists(j, _PATH) then
-				return false
+				return false, f
 			end
 		end
-		return true
+		return true, f
 	else
 		if type(f) == "string" then
 			return F.__file_exists(f, _PATH)
 		else
-			return false
+			return false, f
 		end
 	end
 end
@@ -554,31 +589,6 @@ function F.split_path(path)
 	local i = pi[#pi]
 	local b, p = path:sub(i[2] + 1), path:sub(0, i[1] - 1)
 	return b, p
-end
-
-function listToString(list, level)
-	if level == nil then
-		level = 1
-	end
-	local b = ""
-	local i = 1
-	for k, v in pairs(list) do
-		if type(v) == "function" then
-			v = "function"
-		end
-		if type(v) == "table" then
-			if level < 3 then
-				v = listToString(v, level + 1)
-			end
-		end
-		if i == 1 then
-			b = string.format("%s", v)
-		else
-			b = string.format("%s, %s", b, v)
-		end
-		i = i + 1
-	end
-	return b
 end
 
 return F

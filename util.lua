@@ -298,6 +298,33 @@ function Util:wminfo()
 	end
 	return { wm = wm }
 end
+function Util.tos(list, level)
+	if type(list) ~= "table" then
+		return tostring(list)
+	end
+	if level == nil then
+		level = 1
+	end
+	local b = "[ "
+	local i = 1
+	for k, v in pairs(list) do
+		if type(v) == "function" then
+			v = "function"
+		end
+		if type(v) == "table" then
+			if level < 3 then
+				v = Util.tos(v, level + 1)
+			end
+		end
+		if i == 1 then
+			b = string.format("%s%s", b, v)
+		else
+			b = string.format("%s, %s", b, v)
+		end
+		i = i + 1
+	end
+	return b .. " ]"
+end
 
 function Util.tojson(t)
 	return json.encode(t)
