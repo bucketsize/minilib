@@ -388,7 +388,9 @@ function F.launch(app)
 	Tr.sleep(0.5) -- for some reason needed so exit can nohup process to 1
 	h:close()
 end
-
+function F.expand(p)
+	return p:gsub("~", _HOME)
+end
 function F.test(path)
 	local h = io.open(path, "r")
 	if not h then
@@ -430,7 +432,12 @@ end
 function F.mv(s, t)
 	F.__exec(string.format("mv -v %s %s", s, t))
 end
-
+function F.append(s, f)
+	local h = assert(io.open(F.expand(f), "a"))
+	h:write("\n")
+	h:write(s)
+	h:close()
+end
 function F.wget(url, name)
 	if name then
 		F.__exec(string.format('wget -O %s "%s"', name, url))
