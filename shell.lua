@@ -418,7 +418,10 @@ function F.ln(s, t)
 		[[
         s=%s
         t=%s
-        [ -L $t ] && rm $t
+        r=$(date +"%%s")
+        [ -d $t ] && mv -v $t $t.$r 
+        [ -L $t ] && mv -v $t $t.$r
+        [ -f $t ] && mv -v $t $t.$r
         ln -svf $s $t
     ]],
 		s,
@@ -439,10 +442,11 @@ function F.append(s, f)
 	h:close()
 end
 function F.wget(url, name)
+	print("#wget", url, name)
 	if name then
-		F.__exec(string.format('wget -O %s "%s"', name, url))
+		F.__exec(string.format('curl -o %s  -kL "%s"', name, url))
 	else
-		F.__exec(string.format('wget "%s"', url))
+		F.__exec(string.format('curl -OkL "%s"', url))
 	end
 end
 function F.basename(path)
@@ -464,8 +468,8 @@ function F.github_fetch(user, repo)
         b="%s"
         r="%s"
         [ -d ~/$r ] || git clone https://github.com/$b/$r.git ~/$r
-		cd ~/$r
-		git pull
+    cd ~/$r
+    git pull
     ]],
 		user,
 		repo
