@@ -319,14 +319,23 @@ local EXEC_FORMAT = {
 }
 function F.__exec_cb(cmd, fn)
 	logger.debug("__exec_cb %s", cmd)
-	local h = assert(io.popen(cmd, "r"))
+	local h, e = assert(io.popen(cmd, "r"))
 	for l in h:lines() do
 		fn(l)
 	end
 	h:close()
+	if e then
+		return false, e
+	else
+		return true
+	end
 end
 function F.__exec(cmd)
-	F.__exec_cb(cmd, function() end)
+	local ls = {}
+	local s, e = F.__exec_cb(cmd, function(l)
+		table.insert(ls, l)
+	end)
+	return s, e, ls
 end
 F.exec_cmd = F.__exec
 function F.pgrep(s)
@@ -357,7 +366,7 @@ function F.killall(exe, sig)
 	F.__exec(string.format("killall -%s %s", sig, exe))
 end
 function F.sh(cmd)
-	F.__exec(string.format(EXEC_FORMAT["sh"], cmd))
+	return F.__exec(string.format(EXEC_FORMAT["sh"], cmd))
 end
 function F.nohup(cmd)
 	logger.debug("nohup %s", cmd)
