@@ -1,20 +1,24 @@
 local U = require("minilib.util")
 
 local MTyp = {
-	Obj=1,
-	Maybe=2, Just=3, Nothing=4,
-	List=5,
-	Either=6, Left=7, Right=8,
-	IO=9
+	Obj = 1,
+	Maybe = 2,
+	Just = 3,
+	Nothing = 4,
+	List = 5,
+	Either = 6,
+	Left = 7,
+	Right = 8,
+	IO = 9,
 }
 
-local MObj = {value=nil, Type=MTyp.Obj}
+local MObj = { value = nil, Type = MTyp.Obj }
 function MObj:eq(mobj)
 	return self.value == mobj.value
 end
 function MObj.of(value, typeT)
-	local o = {value=normal}
-	setmetatable(o, {__index = typeT})
+	local o = { value = normal }
+	setmetatable(o, { __index = typeT })
 	return o
 end
 function MObj:show()
@@ -28,24 +32,24 @@ end
 -- monad
 -- of 	:: a -> M a
 -- bind :: (a -> M b) -> M a -> M b
-local Maybe   = {}
-setmetatable(Maybe, {__index = MObj})
+local Maybe = {}
+setmetatable(Maybe, { __index = MObj })
 
-local Just    = {Type = MTyp.Just}
-setmetatable(Just, {__index = Maybe})
+local Just = { Type = MTyp.Just }
+setmetatable(Just, { __index = Maybe })
 
-local Nothing = {Type = MTyp.Nothing}
+local Nothing = { Type = MTyp.Nothing }
 function Nothing:show()
 	return "Nothing"
 end
-setmetatable(Nothing, {__index = Maybe})
+setmetatable(Nothing, { __index = Maybe })
 
 function Just.of(s)
 	if s == nil then
 		return Nothing
 	end
-	local o = {value=s}
-	setmetatable(o, {__index = Just})
+	local o = { value = s }
+	setmetatable(o, { __index = Just })
 	return o
 end
 
@@ -66,20 +70,20 @@ function Nothing:fmap(f)
 end
 
 function Nothing:bind(f)
-	return Nothing 
+	return Nothing
 end
 
-local List = {Type=MTyp.List}
-setmetatable(List, {__index = MObj})
+local List = { Type = MTyp.List }
+setmetatable(List, { __index = MObj })
 
 function List.of(t)
 	local o
 	if type(t) == "table" then
 		o = t or {}
 	else
-		o = {t}
+		o = { t }
 	end
-	setmetatable(o, {__index = List})
+	setmetatable(o, { __index = List })
 	return o
 end
 
@@ -87,7 +91,7 @@ function List:eq(l)
 	if not (#self == #l) then
 		return false
 	end
-	for k,v in ipairs(self) do
+	for k, v in ipairs(self) do
 		if not (v == l[k]) then
 			return false
 		end
@@ -97,36 +101,50 @@ end
 
 function List:fmap(f)
 	local o = {}
-	for k,v in pairs(self) do
+	for k, v in pairs(self) do
 		o[k] = f(v)
 	end
 	return List.of(o)
 end
 function List:keys()
 	local o = {}
-	for k,v in pairs(self) do
+	for k, v in pairs(self) do
 		table.insert(o, k)
 	end
 	return List.of(o)
 end
-
 function List:bind(f)
 	local o = {}
-	for k,v in pairs(self) do
+	for k, v in pairs(self) do
 		o[k] = f(v)[1]
 	end
 	return List.of(o)
 end
+function List:filter(f)
+	local o = {}
+	for k, v in pairs(self) do
+		if f(v) then
+			o[k] = v
+		end
+	end
+	return List.of(o)
+end
+function List:join(d)
+	local o = ""
+	for _, v in pairs(self) do
+		o = o .. tostring(v) .. d
+	end
+	return o
+end
+local Either = { Type = MTyp.Either }
+setmetatable(Either, { __index = MObj })
 
-local Either = {Type=MTyp.Either}
-setmetatable(Either, {__index = MObj})
-
-local Left = {Type=MTyp.Left} 
-setmetatable(Left, {__index = Either})
+local Left = { Type = MTyp.Left }
+setmetatable(Left, { __index = Either })
 
 function Left.of(x)
-	local o = {value=x}
-	setmetatable(o, {__index = Left})
+	local o = { value = x }
+	setmetatable(o, { __index = Left })
 	return o
 end
 
@@ -138,12 +156,12 @@ function Left:bind(f)
 	return f(self.value)
 end
 
-local Right = {Type=MTyp.Left} 
-setmetatable(Right, {__index = Either})
+local Right = { Type = MTyp.Left }
+setmetatable(Right, { __index = Either })
 
 function Right.of(x)
-	local o = {value=x}
-	setmetatable(o, {__index = Right})
+	local o = { value = x }
+	setmetatable(o, { __index = Right })
 	return o
 end
 
@@ -155,11 +173,11 @@ function Right:bind(f)
 	return f(self.value)
 end
 
-local IO = {Type=MTyp.IO}
-setmetatable(IO, {__index = MObj})
+local IO = { Type = MTyp.IO }
+setmetatable(IO, { __index = MObj })
 function IO.of(x)
-	local o = {value=x}
-	setmetatable(o, {__index = IO})
+	local o = { value = x }
+	setmetatable(o, { __index = IO })
 	return o
 end
 function IO:fmap(f)
@@ -197,14 +215,14 @@ function IO.read_lines_pout(f)
 	return IO.of(List.of(ls))
 end
 
-
-return 
-	{ MTyp=MTyp
-	, Maybe=Maybe
-	, Just=Just
-	, Nothing=Nothing
-	, List=List
-	, Either=Either
-	, Left=Left
-	, Right=Right
-	, IO=IO}
+return {
+	MTyp = MTyp,
+	Maybe = Maybe,
+	Just = Just,
+	Nothing = Nothing,
+	List = List,
+	Either = Either,
+	Left = Left,
+	Right = Right,
+	IO = IO,
+}

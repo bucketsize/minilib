@@ -1,29 +1,35 @@
 #!/usr/bin/env lua
-package.path = '?.lua;' .. package.path
-require "luarocks.loader"
-luaunit = require('luaunit')
+package.path = "?.lua;" .. package.path
+require("luarocks.loader")
+luaunit = require("luaunit")
 
 local U = require("util")
 local M = require("monad")
 
-local f = function(x) return x*x end
-local g = function(x) return x+1 end
+local f = function(x)
+	return x * x
+end
+local g = function(x)
+	return x + 1
+end
 
 function test_just_fmap()
 	local m = M.Just.of(12):fmap(f)
-	assert(m:eq(M.Just.of(144)))	
+	assert(m:eq(M.Just.of(144)))
 end
 
 function test_just_fmap_nil()
-	local m = M.Just.of(123)
-		:fmap(function(x) return nil end)
-	assert(m:eq(M.Nothing))	
+	local m = M.Just.of(123):fmap(function(x)
+		return nil
+	end)
+	assert(m:eq(M.Nothing))
 end
 
 function test_just_fmap_nothing()
-	local m = M.Nothing
-		:fmap(function(x) return nil end)
-	assert(m:eq(M.Nothing))	
+	local m = M.Nothing:fmap(function(x)
+		return nil
+	end)
+	assert(m:eq(M.Nothing))
 end
 
 function test_just_id()
@@ -38,27 +44,21 @@ function test_just_assoc()
 end
 
 function test_list_fmap()
-	local m = M.List.of({1,2,3,4})
-		:fmap(f)
-		:fmap(g)
+	local m = M.List.of({ 1, 2, 3, 4 }):fmap(f):fmap(g)
 	assert(m.Type == M.MTyp.List)
 	assert(m[3] == 10)
 end
 
 function test_dict_fmap()
-	local m = M.List.of({a=1,b=2,c=3,d=4})
-		:fmap(f)
-		:fmap(g)
+	local m = M.List.of({ a = 1, b = 2, c = 3, d = 4 }):fmap(f):fmap(g)
 	assert(m.Type == M.MTyp.List)
 	assert(m.c == 10)
 end
 
 function test_either_fmap()
-	local m = M.Left.of(3)
-		:fmap(f)
-		:fmap(g)
+	local m = M.Left.of(3):fmap(f):fmap(g)
 	assert(m.Type == M.MTyp.Left)
-	print(">> left value", m.value) 
+	print(">> left value", m.value)
 	assert(m.value == g(f(3)))
 end
 
@@ -68,8 +68,12 @@ end
 -- M a >>= f >>= g => M a >>= f(g)
 
 -- Maybe
-local mf = function(x) return M.Just.of(x*x) end
-local mg = function(x) return M.Just.of(x+1) end
+local mf = function(x)
+	return M.Just.of(x * x)
+end
+local mg = function(x)
+	return M.Just.of(x + 1)
+end
 
 function test_just_monad_law_1()
 	local m = M.Just.of(8):bind(mf)
@@ -87,63 +91,70 @@ function test_just_monad_law_3()
 	local m = M.Just.of(8):bind(mf):bind(mg)
 	local r = M.Just.of(8):bind(function(x)
 		local y = mf(x)
-		return  mg(y.value)
+		return mg(y.value)
 	end)
 	assert(m:eq(r))
 end
 
 -- List
-local lf = function(x) return M.List.of({x*x}) end
-local lg = function(x) return M.List.of({x+1}) end
+local lf = function(x)
+	return M.List.of({ x * x })
+end
+local lg = function(x)
+	return M.List.of({ x + 1 })
+end
 
 function test_List_monad_law_1()
-	local m = M.List.of({1,2,3,4}):bind(lf)
+	local m = M.List.of({ 1, 2, 3, 4 }):bind(lf)
 	print(m:show())
-	local r = M.List.of({1,4,9,16})
+	local r = M.List.of({ 1, 4, 9, 16 })
 	print(r:show())
 	assert(m:eq(r))
 end
 
 function test_List_monad_law_2()
-	local m = M.List.of({1,2,3,4}):bind(M.List.of)
+	local m = M.List.of({ 1, 2, 3, 4 }):bind(M.List.of)
 	print(m:show())
-	local r = M.List.of({1,2,3,4})
+	local r = M.List.of({ 1, 2, 3, 4 })
 	print(r:show())
 	assert(m:eq(r))
 end
 
 function test_List_monad_law_3()
-	local m = M.List.of({1,2,3,4}):bind(lf):bind(lg)
+	local m = M.List.of({ 1, 2, 3, 4 }):bind(lf):bind(lg)
 	print(m:show())
-	local r = M.List.of({1,2,3,4}):bind(function(x)
+	local r = M.List.of({ 1, 2, 3, 4 }):bind(function(x)
 		local y = lf(x)
-		return  lg(y[1])
+		return lg(y[1])
 	end)
 	print(r:show())
 	assert(m:eq(r))
 end
 
 function test_IO_file()
-	local m = M.IO
-		.read_lines_file("/etc/hosts")
-		:fmap(function(x)
-			return x:fmap(function(a)
-				return "-> "..a
-			end)
+	local m = M.IO.read_lines_file("/etc/hosts"):fmap(function(x)
+		return x:fmap(function(a)
+			return "-> " .. a
 		end)
+	end)
 	print("finally:", U.tojson(m))
 	assert(m.Type == M.MTyp.IO)
 end
 function test_IO_pout()
-	local m = M.IO
-		.read_lines_pout("ps")
-		:fmap(function(x)
-			return x:fmap(function(a)
-				return "-> "..a
-			end)
+	local m = M.IO.read_lines_pout("ps"):fmap(function(x)
+		return x:fmap(function(a)
+			return "-> " .. a
 		end)
+	end)
 	print("finally:", U.tojson(m))
 	assert(m.Type == M.MTyp.IO)
 end
 
-os.exit( luaunit.LuaUnit.run() )
+function test_List_join()
+	local x = M.List.of({ "a", "b", "c", "d" }):join(" ")
+	print(x)
+	x = M.List.of({ "a", 1, "c", { "b" }, "d" }):join(" ")
+	print(x)
+end
+
+os.exit(luaunit.LuaUnit.run())
