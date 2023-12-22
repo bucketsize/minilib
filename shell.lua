@@ -21,6 +21,7 @@ _PATH = {
 	"/usr/local/sbin/",
 	"/opt/bin/",
 	"/opt/sbin/",
+	"/snap/bin/",
 	_HOME .. "/.local/bin/",
 }
 _LIBS = {
@@ -68,7 +69,7 @@ function F.traverse(dque, dqueptr, cb, opts)
 	end
 	local dcur = dque[dqueptr]
 	-- logger.info("traverse", dcur, dqueptr, #dque, cb)
-	function readdiro(diro)
+	local function readdiro(diro)
 		local e = diro:next()
 		if e == nil then
 			diro:close()
@@ -517,7 +518,7 @@ function F.lsb_release()
 	Proc
 		.pipe()
 		.add(F.exec("lsb_release -a"))
-		.add(F.echo())
+		-- .add(F.echo())
 		-- Distributor ID: Debian
 		-- Description:    Debian GNU/Linux 12 (bookworm)
 		-- Release:        12
