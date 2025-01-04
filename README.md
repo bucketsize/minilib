@@ -17,3 +17,7 @@ Clone this repo, and from toplevel:
 
 ## uninstall
 `luarocks remove minilib --local` #removes from ~/.luarocks
+
+## todo 
+- undep build-essential liblua-dev luarocks
+- bundle lua runtime < 200kb

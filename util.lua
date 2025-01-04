@@ -1,9 +1,6 @@
 package.path = "?.lua;" .. package.path
 require("luarocks.loader")
 
-local json = require("minilib.json")
-local logger = require("minilib.logger").create()
-
 local Util = {}
 function Util:tofile(file, t)
 	local h = assert(io.open(file, "w"))
@@ -27,7 +24,7 @@ function Util:size(t)
 		return #t
 	else
 		local c = 0
-		for i, v in pairs(t) do
+		for _, _ in pairs(t) do
 			c = c + 1
 		end
 		return c
@@ -59,7 +56,7 @@ function Util:eq(o1, o2)
 	end
 	return true
 end
-function __find_all(sep, a, i, path)
+local function __find_all(sep, a, i, path)
 	local s, f = path:find(sep, i)
 	-- logger.info(path, i, s, f)
 	if f then
@@ -69,7 +66,7 @@ function __find_all(sep, a, i, path)
 		return a
 	end
 end
-function __split(sep, a, i, path, opt)
+local function __split(sep, a, i, path, opt)
 	local s, f = path:find(sep, i, opt.plain)
 	-- logger.info(path, i, s, f)
 	if f then
@@ -97,7 +94,6 @@ function Util:split(sep, path, opt)
 			opt.plain = not opt.regex
 		end
 	end
-	-- logger.info("split opts:", opt.regex, opt.plain)
 	return __split(sep, {}, 1, path, opt)
 end
 function Util:segpath(path)
@@ -133,16 +129,9 @@ function Util:map(f, t)
 	end
 	return r
 end
-function Util:map2(fk, fv, t)
-	local r = {}
-	for k, v in pairs(t) do
-		r[fk(k)] = fv(v)
-	end
-	return r
-end
 function Util:filter(f, t)
 	local r = {}
-	for k, v in pairs(t) do
+	for _, v in pairs(t) do
 		if f(v) then
 			table.insert(r, v)
 		end
@@ -151,7 +140,7 @@ function Util:filter(f, t)
 end
 function Util:fold(f, t, i)
 	local r = i
-	for k, v in pairs(t) do
+	for _, v in pairs(t) do
 		r = f(v, r)
 	end
 	return r
@@ -200,64 +189,6 @@ function Util:head_file(filename)
 	end
 	return r
 end
-function Util:log(level, file, msg)
-	local h = assert(io.open(file, "a"))
-	h:write(string.format("%s - %s - %s\n", os.date("%Y-%m-%dT%H:%M:%S+05:30"), level, msg))
-	h:close()
-end
-function Util:grep(file, pattern)
-	local r = Util:stream_file(file, function(line)
-		local m = string.match(line, pattern)
-		if m then
-			return m
-		end
-	end)
-	for i, v in ipairs(r) do
-		if not (v == nil) then
-			return v
-		end
-	end
-end
-
-function Util:exec(cmd)
-	logger.debug("exec %s", cmd)
-	local h = io.popen(cmd, "r")
-	local r
-	if h == nil then
-		r = ""
-	else
-		r = h:read("*a")
-		h:close()
-	end
-	return r
-end
-function Util:stream_exec(cmd, fn)
-	local h = assert(io.popen(cmd))
-	while true do
-		local l = h:read("*line")
-		if l == nil then
-			break
-		end
-		fn(l)
-	end
-	h:close()
-end
-function Util:stream_file(cmd, fn)
-	local h = assert(io.open(cmd, "r"))
-	local r = {}
-	while true do
-		local l = h:read("*line")
-		if l == nil then
-			break
-		end
-		local s = fn(l)
-		if s then
-			table.insert(r, s)
-		end
-	end
-	h:close()
-	return r
-end
 function Util:join(tag, list)
 	local s = ""
 	for i, v in ipairs(list) do
@@ -287,17 +218,6 @@ function Util:strip(str)
 		end
 	end
 end
-function Util:wminfo()
-	local h = assert(io.popen("wmctrl -m"))
-	local wm = "generic"
-	for line in h:lines() do
-		wm = line:match("Name:%s(%w+)")
-		if wm then
-			break
-		end
-	end
-	return { wm = wm }
-end
 function Util.tos(list, level)
 	if type(list) ~= "table" then
 		return tostring(list)
@@ -324,10 +244,6 @@ function Util.tos(list, level)
 		i = i + 1
 	end
 	return b .. " ]"
-end
-
-function Util.tojson(t)
-	return json.encode(t)
 end
 
 return Util

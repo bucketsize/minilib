@@ -1,9 +1,6 @@
 package.path = "?.lua;" .. package.path
 require("luarocks.loader")
 
-local lfs_ = require("lfs")
-local sha1 = require("sha1")
-
 local Util = require("minilib.util")
 local Proc = require("minilib.process")
 local Tr = require("minilib.timer")
@@ -32,6 +29,7 @@ _LIBS = {
 }
 
 local F = { HOME = _HOME, USER = _USER }
+local S = { HOME = _HOME, USER = _USER }
 
 function F.cat(path)
 	local h = assert(io.open(path, "r"))
@@ -56,65 +54,10 @@ function F.exec(path)
 			l = h:read("*line")
 			if l == nil then
 				h:close()
-				h = nil
 			end
 		end
 		return l
 	end
-end
-
-function F.traverse(dque, dqueptr, cb, opts)
-	if not opts then
-		opts = {}
-	end
-	local dcur = dque[dqueptr]
-	-- logger.info("traverse", dcur, dqueptr, #dque, cb)
-	local function readdiro(diro)
-		local e = diro:next()
-		if e == nil then
-			diro:close()
-			diro = nil
-			return F.traverse(dque, dqueptr + 1, cb, opts)
-		else
-			if e == "." or e == ".." then
-				-- logger.info("readdiro, reject", dcur, e)
-				return readdiro(diro)
-			end
-			local l = dcur .. "/" .. e
-			local attrs, err = lfs_.attributes(l)
-			if err then
-				-- logger.info("readdiro, error", l, err)
-				return readdiro(diro)
-			end
-			if attrs.mode == "file" then
-				-- logger.info("readdiro, next", l)
-				if opts.pattern then
-					if l:find(opts.pattern) then
-						cb(l)
-					end
-				else
-					cb(l)
-				end
-				return readdiro(diro)
-			else
-				-- logger.info("readdiro, dque", l, attrs.mode)
-				table.insert(dque, l)
-				return readdiro(diro)
-			end
-		end
-	end
-	if not dcur then
-		return nil
-	end
-	local ok, res = pcall(function()
-		local i, d = lfs_.dir(dcur)
-		return { iter = i, diro = d }
-	end)
-	-- logger.info("traverse, state", ok, res)
-	if not ok then
-		return F.traverse(dque, dqueptr + 1, cb, opts)
-	end
-	return readdiro(res.diro)
 end
 
 function F.find(path, pattern)
@@ -208,20 +151,15 @@ function F.sed(slist)
 end
 
 function F.sha1sum(file)
-	local h = io.open(file, "rb")
-	local s = nil
-	if h then
-		s = sha1.sha1(h:read("*all"))
-		h:close()
-	end
-	return s
+	local s, e, ls = S.__exec("sha1sum < " .. file)
+	return ls[1]
 end
 
 function F.open(path, mode)
 	local h = io.open(path, mode)
 	if h == nil then
 		local _, d = F.split_path(path)
-		lfs_.mkdir(d)
+		F.mkdir(d)
 		h = io.open(path, mode)
 	end
 	return h
@@ -318,7 +256,7 @@ local EXEC_FORMAT = {
 	fork = "%s &",
 	launch = "nohup setsid %s > /dev/null &",
 }
-function F.__exec_cb(cmd, fn)
+function S.__exec_cb(cmd, fn)
 	logger.debug("__exec_cb %s", cmd)
 	local h, e = assert(io.popen(cmd, "r"))
 	for l in h:lines() do
@@ -331,15 +269,15 @@ function F.__exec_cb(cmd, fn)
 		return true
 	end
 end
-function F.__exec(cmd)
+function S.__exec(cmd)
 	local ls = {}
 	local s, e = F.__exec_cb(cmd, function(l)
 		table.insert(ls, l)
 	end)
 	return s, e, ls
 end
-F.exec_cmd = F.__exec
-function F.pgrep(s)
+S.exec_cmd = S.__exec
+function S.pgrep(s)
 	if s == nil or s == "" then
 		return false
 	end
@@ -354,41 +292,41 @@ function F.pgrep(s)
 	h:close()
 	return p, r
 end
-function F.kill(pid, sig)
+function S.kill(pid, sig)
 	if not sig then
 		sig = 9
 	end
 	F.__exec(string.format("kill -%s %s", sig, pid))
 end
-function F.killall(exe, sig)
+function S.killall(exe, sig)
 	if not sig then
 		sig = 9
 	end
-	F.__exec(string.format("killall -%s %s", sig, exe))
+	S.__exec(string.format("killall -%s %s", sig, exe))
 end
-function F.sh(cmd)
-	return F.__exec(string.format(EXEC_FORMAT["sh"], cmd))
+function S.sh(cmd)
+	return S.__exec(string.format(EXEC_FORMAT["sh"], cmd))
 end
-function F.nohup(cmd)
+function S.nohup(cmd)
 	logger.debug("nohup %s", cmd)
 	os.execute(string.format(EXEC_FORMAT["nohup"], cmd))
 end
-function F.fork(cmd)
+function S.fork(cmd)
 	logger.debug("fork %s", cmd)
 	os.execute(string.format(EXEC_FORMAT["fork"], cmd))
 end
-function F.forkonce(exe, args)
-	if not F.pgrep(exe) then
+function S.forkonce(exe, args)
+	if not S.pgrep(exe) then
 		if args then
-			F.fork(string.format("%s %s", exe, args))
+			S.fork(string.format("%s %s", exe, args))
 		else
-			F.fork(exe)
+			S.fork(exe)
 		end
 	else
 		logger.info("forkonce, already running: %s %s", exe, args)
 	end
 end
-function F.launch(app)
+function S.launch(app)
 	local cmd =
 		string.format(EXEC_FORMAT["launch"], app:gsub("%%F", ""):gsub("%%f", ""):gsub("%%U", ""):gsub("%%u", ""))
 	logger.info("launch %s", cmd)
@@ -398,10 +336,10 @@ function F.launch(app)
 	Tr.sleep(0.5) -- for some reason needed so exit can nohup process to 1
 	h:close()
 end
-function F.expand(p)
+function S.expand(p)
 	return p:gsub("~", _HOME)
 end
-function F.test(path)
+function S.test(path)
 	local h = io.open(path, "r")
 	if not h then
 		return nil
@@ -415,16 +353,16 @@ function F.test(path)
 	end
 end
 
-function F.mkdir(path)
-	F.__exec(string.format("mkdir -pv %s", path))
+function S.mkdir(path)
+	S.__exec(string.format("mkdir -pv %s", path))
 end
 
-function F.rm(path)
-	F.__exec(string.format("rm -v %s", path))
+function S.rm(path)
+	S.__exec(string.format("rm -v %s", path))
 end
 
 function F.ln(s, t)
-	F.sh(string.format(
+	S.sh(string.format(
 		[[
         s=%s
         t=%s
@@ -439,11 +377,11 @@ function F.ln(s, t)
 	))
 end
 
-function F.cp(s, t)
-	F.__exec(string.format("cp -v %s %s", s, t))
+function S.cp(s, t)
+	S.__exec(string.format("cp -v %s %s", s, t))
 end
 function F.mv(s, t)
-	F.__exec(string.format("mv -v %s %s", s, t))
+	S.__exec(string.format("mv -v %s %s", s, t))
 end
 function F.append(s, f)
 	local h = assert(io.open(F.expand(f), "a"))
@@ -451,29 +389,29 @@ function F.append(s, f)
 	h:write(s)
 	h:close()
 end
-function F.wget(url, name)
-	print("#wget", url, name)
+function S.wget(url, name)
+	print("#curl", url, name)
 	if name then
-		F.__exec(string.format('curl -o %s  -kL "%s"', name, url))
+		S.__exec(string.format('curl -o %s  -kL "%s"', name, url))
 	else
-		F.__exec(string.format('curl -OkL "%s"', url))
+		S.__exec(string.format('curl -OkL "%s"', url))
 	end
 end
-function F.basename(path)
+function S.basename(path)
 	local ps = Util:segpath(path)
 	return ps[#ps]
 end
-function F.groups()
+function S.groups()
 	local gs = {}
-	F.__exec_cb("groups", function(c)
+	S.__exec_cb("groups", function(c)
 		if c then
 			gs = Util:split(" ", c)
 		end
 	end)
 	return gs
 end
-function F.github_fetch(user, repo)
-	F.sh(string.format(
+function S.github_fetch(user, repo)
+	S.sh(string.format(
 		[[
         b="%s"
         r="%s"
@@ -492,7 +430,7 @@ _ARCH_FLAG = {
 	AuthenticAMD = "x86_64",
 	BCM2835 = "aarch64",
 }
-function F.arch()
+function S.arch()
 	local parch = "unknown-isa"
 	Proc.pipe()
 		.add(F.cat("/proc/cpuinfo"))
@@ -513,7 +451,7 @@ function F.arch()
 		.run()
 	return parch
 end
-function F.lsb_release()
+function S.lsb_release()
 	local parch = { distro = "unknown" }
 	Proc
 		.pipe()
@@ -550,7 +488,7 @@ function F.lsb_release()
 	return parch
 end
 
-function F.path_exists(file)
+function S.path_exists(file)
 	local h = io.open(file, "r")
 	if h == nil then
 		return false, file
@@ -559,50 +497,50 @@ function F.path_exists(file)
 	return true, file
 end
 
-function F.__file_exists(file, repo)
+function S.__file_exists(file, repo)
 	for _, v in ipairs(repo) do
 		local p = v .. file
-		if F.path_exists(p) then
+		if S.path_exists(p) then
 			return true, p
 		end
 	end
 	return false, file
 end
 
-function F.file_exists(f)
+function S.file_exists(f)
 	if type(f) == "table" then
 		for _, j in ipairs(f) do
-			if not F.__file_exists(j, _PATH) then
+			if not S.__file_exists(j, _PATH) then
 				return false, f
 			end
 		end
 		return true, f
 	else
 		if type(f) == "string" then
-			return F.__file_exists(f, _PATH)
+			return S.__file_exists(f, _PATH)
 		else
 			return false, f
 		end
 	end
 end
 
-function F.libs()
+function S.libs()
 	table.insert(_LIBS, string.format("/lib/%s-linux-gnu/pkgconfig/", F.arch()))
 	return _LIBS
 end
 
-function F.lib_exists(lib)
-	return F.__file_exists(lib .. ".pc", F.libs())
+function S.lib_exists(lib)
+	return S.__file_exists(lib .. ".pc", F.libs())
 end
 
-function F.assert_file_exists(file)
-	if not F.file_exists(file) then
+function S.assert_file_exists(file)
+	if not S.file_exists(file) then
 		logger.info("assert_file_exists, requires %s", file)
 		os.exit(1)
 	end
 end
 
-function F.split_path(path)
+function S.split_path(path)
 	local pi = Util:find_all("/", path)
 	if #pi == 0 then
 		return path
