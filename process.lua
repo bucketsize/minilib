@@ -1,4 +1,3 @@
-local Util = require("minilib.util")
 local logger = require("minilib.logger").create()
 
 -- @Deprecated -- use via monad
