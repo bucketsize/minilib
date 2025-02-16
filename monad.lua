@@ -18,7 +18,7 @@ function MObj:eq(mobj)
 	return self.value == mobj.value
 end
 function MObj.of(x, typeT)
-	local o = { value = x}
+	local o = { value = x }
 	setmetatable(o, { __index = typeT })
 	return o
 end
@@ -218,19 +218,18 @@ end
 local Stream = { Type = MTyp.Stream }
 setmetatable(Stream, { __index = MObj })
 function Stream.of(x)
-	local o = { value = x, source=nil }
+	local o = { value = x, source = nil }
 	setmetatable(o, { __index = Stream })
 	return o
 end
 function Stream.filelines(f)
 	local h = assert(io.open(f, "r"))
-  local i = Stream.of(h)
-  i.source = "filelines"
-  i.readfn = function()
+	local i = Stream.of(h)
+	i.source = "filelines"
+	i.readfn = function()
 		return h:read("*line")
-  end
+	end
 end
-function Stream.fmap()
 
 return {
 	MTyp = MTyp,
