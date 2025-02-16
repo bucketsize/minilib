@@ -3,7 +3,6 @@ require("luarocks.loader")
 
 local Util = require("minilib.util")
 local Proc = require("minilib.process")
-local Tr = require("minilib.timer")
 local logger = require("minilib.logger").create()
 
 _HOME = os.getenv("HOME")
@@ -333,7 +332,6 @@ function S.launch(app)
 	local h = assert(io.popen(cmd, "r"))
 	local r = h:read("*a")
 	logger.info(r)
-	Tr.sleep(0.5) -- for some reason needed so exit can nohup process to 1
 	h:close()
 end
 function S.expand(p)
