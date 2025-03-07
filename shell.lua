@@ -270,7 +270,7 @@ function S.__exec_cb(cmd, fn)
 end
 function S.__exec(cmd)
 	local ls = {}
-	local s, e = F.__exec_cb(cmd, function(l)
+	local s, e = S.__exec_cb(cmd, function(l)
 		table.insert(ls, l)
 	end)
 	return s, e, ls
@@ -295,7 +295,7 @@ function S.kill(pid, sig)
 	if not sig then
 		sig = 9
 	end
-	F.__exec(string.format("kill -%s %s", sig, pid))
+	S.__exec(string.format("kill -%s %s", sig, pid))
 end
 function S.killall(exe, sig)
 	if not sig then
@@ -359,7 +359,7 @@ function S.rm(path)
 	S.__exec(string.format("rm -v %s", path))
 end
 
-function F.ln(s, t)
+function S.ln(s, t)
 	S.sh(string.format(
 		[[
         s=%s
@@ -378,10 +378,10 @@ end
 function S.cp(s, t)
 	S.__exec(string.format("cp -v %s %s", s, t))
 end
-function F.mv(s, t)
+function S.mv(s, t)
 	S.__exec(string.format("mv -v %s %s", s, t))
 end
-function F.append(s, f)
+function S.append(s, f)
 	local h = assert(io.open(F.expand(f), "a"))
 	h:write("\n")
 	h:write(s)
@@ -451,32 +451,55 @@ function S.arch()
 end
 function S.lsb_release()
 	local parch = { distro = "unknown" }
-	Proc
-		.pipe()
-		.add(F.exec("lsb_release -a"))
-		-- .add(F.echo())
-		-- Distributor ID: Debian
-		-- Description:    Debian GNU/Linux 12 (bookworm)
-		-- Release:        12
-		-- Codename:       bookworm
-		.add(
-			Proc.branch()
-				.add(F.grep("Distributor ID:%s+(.+)"))
-				.add(F.grep("Description:%s+(.+)"))
-				.add(F.grep("Release:%s+(.+)"))
-				.add(F.grep("Codename:%s+(.+)"))
-				.build()
-		)
+	local extfn = nil
+	if S.path_exists("/etc/os-release") then
+		extfn = Proc
+			.pipe()
+			.add(F.cat("/etc/os-release"))
+			.add(F.echo())
+			-- NAME="Fedora Linux"
+			-- VERSION="40 (Sway)"
+			-- ID=fedora
+			-- VERSION_ID=40
+			-- VERSION_CODENAME=""
+			.add(
+				Proc.branch()
+					.add(F.grep("^ID=(.+)"))
+					.add(F.grep("PRETTY_NAME=(.+)"))
+					.add(F.grep("VERSION_ID=(.+)"))
+					.add(F.grep("VERSION_CODEAME=(.+)"))
+					.build()
+			)
+	else
+		extfn = Proc
+			.pipe()
+			.add(F.exec("lsb_release -a"))
+			.add(F.echo())
+			-- Distributor ID: Debian
+			-- Description:    Debian GNU/Linux 12 (bookworm)
+			-- Release:        12
+			-- Codename:       bookworm
+			.add(
+				Proc.branch()
+					.add(F.grep("Distributor ID:%s+(.+)"))
+					.add(F.grep("Description:%s+(.+)"))
+					.add(F.grep("Release:%s+(.+)"))
+					.add(F.grep("Codename:%s+(.+)"))
+					.build()
+			)
+	end
+
+	extfn
 		.add(Proc.cull())
 		.add(function(list)
 			if list == nil then
 				return list
 			end
 			for i, v in pairs(list) do
-				print("lsb_release>", i, v[1])
+				print("lsb_release>", i, v[1]:lower())
 				if v ~= nil then
 					if i == 1 then
-						parch = { distro = v[1] }
+						parch = { distro = v[1]:lower() }
 					end
 				end
 			end
@@ -547,5 +570,7 @@ function S.split_path(path)
 	local b, p = path:sub(i[2] + 1), path:sub(0, i[1] - 1)
 	return b, p
 end
+
+F.util = S
 
 return F
