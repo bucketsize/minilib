@@ -106,7 +106,7 @@ function F.read()
 	local h, p = nil, 1
 	local paths = {}
 	return function(path)
-		if not (path == nil or Util:haz(skip_paths, path)) then
+		if not (path == nil or Util.haz(skip_paths, path)) then
 			table.insert(paths, path)
 		end
 		if h == nil and #paths > 0 then
@@ -396,14 +396,14 @@ function S.wget(url, name)
 	end
 end
 function S.basename(path)
-	local ps = Util:segpath(path)
+	local ps = Util.segpath(path)
 	return ps[#ps]
 end
 function S.groups()
 	local gs = {}
 	S.__exec_cb("groups", function(c)
 		if c then
-			gs = Util:split(" ", c)
+			gs = Util.split(" ", c)
 		end
 	end)
 	return gs
@@ -562,7 +562,7 @@ function S.assert_file_exists(file)
 end
 
 function S.split_path(path)
-	local pi = Util:find_all("/", path)
+	local pi = Util.find_all("/", path)
 	if #pi == 0 then
 		return path
 	end

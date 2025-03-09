@@ -2,14 +2,14 @@ package.path = "?.lua;" .. package.path
 require("luarocks.loader")
 
 local Util = {}
-function Util:tofile(file, t)
+function Util.tofile(file, t)
 	local h = assert(io.open(file, "w"))
 	for k, v in pairs(t) do
 		h:write(string.format("%s => %s\n", k, v))
 	end
 	h:close()
 end
-function Util:fromfile(file)
+function Util.fromfile(file)
 	local h = assert(io.open(file, "r"))
 	local r = {}
 	for l in h:lines() do
@@ -19,7 +19,7 @@ function Util:fromfile(file)
 	h:close()
 	return r
 end
-function Util:size(t)
+function Util.size(t)
 	if #t > 0 and t[#t + 1] == nil then
 		return #t
 	else
@@ -30,21 +30,21 @@ function Util:size(t)
 		return c
 	end
 end
-function Util:keys(t)
+function Util.keys(t)
 	local c = {}
 	for i, _ in pairs(t) do
 		table.insert(c, i)
 	end
 	return c
 end
-function Util:values(t)
+function Util.values(t)
 	local c = {}
 	for _, i in pairs(t) do
 		table.insert(c, i)
 	end
 	return c
 end
-function Util:eq(o1, o2)
+function Util.eq(o1, o2)
 	if #o1 ~= #o2 then
 		return false
 	end
@@ -79,10 +79,10 @@ local function __split(sep, a, i, path, opt)
 		return a
 	end
 end
-function Util:find_all(sep, path)
+function Util.find_all(sep, path)
 	return __find_all(sep, {}, 1, path)
 end
-function Util:split(sep, path, opt)
+function Util.split(sep, path, opt)
 	if not opt then
 		opt = { regex = true, plain = false }
 	else
@@ -96,8 +96,16 @@ function Util:split(sep, path, opt)
 	end
 	return __split(sep, {}, 1, path, opt)
 end
-function Util:segpath(path)
-	return Util:split("/", path)
+function Util.segpath(path)
+	return Util.split("/", path)
+end
+function Util.std_split(sep, str)
+	local sep, fields = sep or ":", {}
+	local pattern = string.format("([^%s]+)", sep)
+	str:gsub(pattern, function(c)
+		fields[#fields + 1] = c
+	end)
+	return fields
 end
 function Util:head(itable)
 	if #itable == 0 then
@@ -105,7 +113,7 @@ function Util:head(itable)
 	end
 	return itable[1]
 end
-function Util:tail(itable)
+function Util.tail(itable)
 	if #itable == 0 then
 		return {}
 	end
@@ -115,21 +123,21 @@ function Util:tail(itable)
 	end
 	return r
 end
-function Util:reverse(itable)
+function Util.reverse(itable)
 	local r = {}
 	for i = #itable, 1, -1 do
 		table.insert(r, itable[i])
 	end
 	return r
 end
-function Util:map(f, t)
+function Util.map(f, t)
 	local r = {}
 	for k, v in pairs(t) do
 		r[k] = f(v)
 	end
 	return r
 end
-function Util:filter(f, t)
+function Util.filter(f, t)
 	local r = {}
 	for _, v in pairs(t) do
 		if f(v) then
@@ -138,14 +146,14 @@ function Util:filter(f, t)
 	end
 	return r
 end
-function Util:fold(f, t, i)
+function Util.fold(f, t, i)
 	local r = i
 	for _, v in pairs(t) do
 		r = f(v, r)
 	end
 	return r
 end
-function Util:haz(list, s)
+function Util.haz(list, s)
 	for _, w in ipairs(list) do
 		if s:find(w) then
 			return true
@@ -153,21 +161,21 @@ function Util:haz(list, s)
 	end
 	return false
 end
-function Util:f_else(p, fn1, fn2)
+function Util.f_else(p, fn1, fn2)
 	if p then
 		fn1()
 	else
 		return fn2()
 	end
 end
-function Util:if_else(p, o1, o2)
+function Util.if_else(p, o1, o2)
 	if p then
 		return o1
 	else
 		return o2
 	end
 end
-function Util:read(filename)
+function Util.read(filename)
 	local h = io.open(filename, "r")
 	local r
 	if h then
@@ -178,7 +186,7 @@ function Util:read(filename)
 	end
 	return r
 end
-function Util:head_file(filename)
+function Util.head_file(filename)
 	local h = io.open(filename, "r")
 	local r
 	if h then
@@ -189,7 +197,7 @@ function Util:head_file(filename)
 	end
 	return r
 end
-function Util:join(tag, list)
+function Util.join(tag, list)
 	local s = ""
 	for i, v in ipairs(list) do
 		if i == #list then
@@ -200,10 +208,10 @@ function Util:join(tag, list)
 	end
 	return s
 end
-function Util:iswhitespace(c)
+function Util.iswhitespace(c)
 	return (c == "" or c == " " or c == "\t")
 end
-function Util:strip(str)
+function Util.strip(str)
 	for i = 1, #str do
 		local c = str:sub(i, i)
 		--logger.info(i,c)
