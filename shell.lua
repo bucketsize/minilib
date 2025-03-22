@@ -382,7 +382,7 @@ function S.mv(s, t)
 	S.__exec(string.format("mv -v %s %s", s, t))
 end
 function S.append(s, f)
-	local h = assert(io.open(F.expand(f), "a"))
+	local h = assert(io.open(S.expand(f), "a"))
 	h:write("\n")
 	h:write(s)
 	h:close()
